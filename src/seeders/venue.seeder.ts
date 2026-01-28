@@ -5,11 +5,11 @@ class VenueSeeder {
     public create = async () => {
         return prisma.venue.create({
             data: {
-                venue_name: faker.company.name(),
+                venue_name: `${faker.company.name()} ${faker.location.county()}`,
                 venue_address: faker.location.streetAddress(),
                 venue_coordinate: faker.location.nearbyGPSCoordinate().toString(),
                 venue_description: faker.lorem.paragraph(),
-                created_at: faker.date.past({ years: 3 }),
+                created_at: faker.date.past({ years: 3 })
             },
         })
     }

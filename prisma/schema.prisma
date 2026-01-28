@@ -39,7 +39,7 @@ model customer {
 model referral_code_history {
   id                String     @id @default(uuid()) @db.Char(36)
   customer_owner_id String     @db.Char(36)
-  customer_user_id  String     @db.Char(36)
+  customer_user_id  String     @unique @db.Char(36)
   created_at        DateTime   @default(now()) @db.Timestamptz(6)
 
   // FK
