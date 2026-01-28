@@ -2,10 +2,12 @@ import "dotenv/config"
 import { prisma } from "./configs/prisma"
 import CustomerSeeder from "./seeders/customer.seeder"
 import EventOrganizerSeeder from "./seeders/event_organizer.seeder"
+import SocialMediaSeeder from "./seeders/social_media.seeder"
 
 class Seeder {
     private customerSeeder = new CustomerSeeder()
-    private eventOrganizer = new EventOrganizerSeeder()
+    private eventOrganizerSeeder = new EventOrganizerSeeder()
+    private socialMediaSeeder = new SocialMediaSeeder()
     private password = "nopass123"
 
     private clearAllTables = async () => {
@@ -20,7 +22,8 @@ class Seeder {
 
             // Run the seeder
             await this.customerSeeder.createMany(100, this.password)
-            await this.eventOrganizer.createMany(25, this.password)
+            await this.eventOrganizerSeeder.createMany(25, this.password)
+            await this.socialMediaSeeder.createMany(20)
         } catch (err) {
             console.error(err)
         } finally {
