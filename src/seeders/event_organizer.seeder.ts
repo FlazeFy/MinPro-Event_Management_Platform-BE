@@ -1,24 +1,23 @@
 import { faker } from "@faker-js/faker"
 import { prisma } from "../configs/prisma"
 import { hashPassword } from "../utils/auth.util"
-import { generateRefferalCode } from "../utils/generator.util"
 
-class CustomerSeeder {
+class EventOrganizerSeeder {
     public create = async (password: string) => {
         // Prepare dummy phone number
         const rawPhone = faker.phone.number()
         const phone_number = rawPhone.replace(/\D/g, "").slice(0, 16)
 
-        return prisma.customer.create({
+        return prisma.event_organizer.create({
             data: {
                 id: faker.string.uuid(),
                 username: faker.internet.username(),
                 email: faker.internet.email().toLowerCase(),
-                fullname: faker.person.fullName(),
+                organizer_name: faker.company.name(),
+                bio: faker.lorem.paragraph(),
                 password: await hashPassword(password), 
                 phone_number: phone_number,
-                referral_code: generateRefferalCode(),
-                birth_date: faker.date.birthdate(),
+                address: faker.location.streetAddress(),
                 created_at: faker.date.past({ years: 3 }),
             },
         })
@@ -31,4 +30,4 @@ class CustomerSeeder {
     }
 }
 
-export default CustomerSeeder
+export default EventOrganizerSeeder
