@@ -10,3 +10,7 @@ export const generateRefferalCode = () => {
   
     return res
 }  
+
+export const randomEnumValue = <T>(values: readonly T[]): T => {
+    return values[Math.floor(Math.random() * values.length)]
+}
