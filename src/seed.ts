@@ -1,6 +1,7 @@
 import "dotenv/config"
 import { prisma } from "./configs/prisma"
 import CustomerSeeder from "./seeders/customer.seeder"
+import DiscountSeeder from "./seeders/discount.seeder"
 import EventOrganizerSeeder from "./seeders/event_organizer.seeder"
 import ReferralCodeHistorySeeder from "./seeders/referral_code_history.seeder"
 import SocialMediaSeeder from "./seeders/social_media.seeder"
@@ -12,9 +13,11 @@ class Seeder {
     private socialMediaSeeder = new SocialMediaSeeder()
     private venueSeeder = new VenueSeeder()
     private refCodeSeeder = new ReferralCodeHistorySeeder()
+    private discountSeeder = new DiscountSeeder()
     private password = "nopass123"
 
     private clearAllTables = async () => {
+        await prisma.discount.deleteMany()
         await prisma.referral_code_history.deleteMany()
         await prisma.social_media.deleteMany()
         await prisma.customer.deleteMany()
@@ -32,6 +35,7 @@ class Seeder {
             await this.customerSeeder.createMany(100, this.password)
             await this.eventOrganizerSeeder.createMany(25, this.password)
             await this.socialMediaSeeder.createMany(20)
+            await this.discountSeeder.createMany(10)
             await this.refCodeSeeder.createMany(100)
         } catch (err) {
             console.error(err)

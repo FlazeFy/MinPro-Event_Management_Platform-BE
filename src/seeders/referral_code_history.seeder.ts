@@ -61,6 +61,12 @@ class ReferralCodeHistorySeeder {
 
         const createdHistories = []
         for (let i = 0; i < usageCount; i++) {
+            // Check current count to ensure max 3 redeemers per owner
+            const currentCount = await prisma.referral_code_history.count({
+                where: { customer_owner_id: owner.id },
+            })
+            if (currentCount >= 3) break
+
             const user = await this.findRandomCustomerUser(owner.usedUserIds)
             owner.usedUserIds.push(user.id) // track exclusions for next seed's iteration
 

@@ -30,6 +30,7 @@ model customer {
   birth_date    DateTime   @db.Date
   created_at    DateTime   @default(now()) @db.Timestamptz(6)
   updated_at    DateTime?  @updatedAt @db.Timestamptz(6)
+  points        Int        @default(0) @db.Integer()
 
   // Relations 
   owner_referral_code_histories referral_code_history[] @relation("OwnerReferralHistory")
@@ -61,6 +62,7 @@ model event_organizer {
 
   // Relations 
   social_medias social_media[]
+  discounts     discount[]
 }
 
 model social_media {
@@ -80,4 +82,15 @@ model venue {
   venue_address     String    @db.VarChar(500)
   venue_coordinate  String    @db.Char(144)
   created_at        DateTime  @default(now()) @db.Timestamptz(6)
+}
+
+model discount {
+  id                  String  @id @default(uuid()) @db.Char(36)
+  event_organizer_id  String  @db.Char(36)
+  percentage          Int     @db.Integer()
+  description         String  @db.VarChar(144)
+  created_at     DateTime   @default(now()) @db.Timestamptz(6)
+
+  // FK
+  event_organizer event_organizer @relation(fields: [event_organizer_id], references: [id])
 }

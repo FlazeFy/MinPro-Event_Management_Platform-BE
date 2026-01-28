@@ -8,6 +8,7 @@ class CustomerSeeder {
         // Prepare dummy phone number
         const rawPhone = faker.phone.number()
         const phone_number = rawPhone.replace(/\D/g, "").slice(0, 16)
+        const points = faker.number.int({ min: 0, max: 50 }) * 1000 
 
         return prisma.customer.create({
             data: {
@@ -18,6 +19,7 @@ class CustomerSeeder {
                 phone_number: phone_number,
                 referral_code: generateRefferalCode(),
                 birth_date: faker.date.birthdate(),
+                points,
                 created_at: faker.date.past({ years: 3 }),
             },
         })
