@@ -27,7 +27,6 @@ class SocialMediaSeeder {
 
         return prisma.social_media.create({
             data: {
-                id: faker.string.uuid(),
                 event_organizer: { connect: { id: eventOrganizer.id } },
                 social_media_platform: this.randomSocialMediaPlatform(),
                 social_media_url: faker.internet.url()

@@ -10,7 +10,6 @@ class EventOrganizerSeeder {
 
         return prisma.event_organizer.create({
             data: {
-                id: faker.string.uuid(),
                 username: faker.internet.username(),
                 email: faker.internet.email().toLowerCase(),
                 organizer_name: faker.company.name(),

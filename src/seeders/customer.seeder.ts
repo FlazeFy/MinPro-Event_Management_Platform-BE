@@ -11,7 +11,6 @@ class CustomerSeeder {
 
         return prisma.customer.create({
             data: {
-                id: faker.string.uuid(),
                 username: faker.internet.username(),
                 email: faker.internet.email().toLowerCase(),
                 fullname: faker.person.fullName(),
