@@ -16,12 +16,11 @@ class DiscountSeeder {
 
     public create = async () => {
         // Find random event organizer
-        const eventOrganizer = await this.findRandomEventOrganiser()
-        if (!eventOrganizer) throw new Error('No event organizer found. Seed event organizer first')
+        const eventOrganizer = faker.datatype.boolean() ? await this.findRandomEventOrganiser() : null
 
         return prisma.discount.create({
             data: {
-                event_organizer: { connect: { id: eventOrganizer.id } },
+                event_organizer_id: eventOrganizer?.id ?? null,
                 percentage: faker.number.int({ min: 5, max: 30 }),
                 description: faker.lorem.sentence(),
                 created_at: faker.date.past({ years: 1 }),

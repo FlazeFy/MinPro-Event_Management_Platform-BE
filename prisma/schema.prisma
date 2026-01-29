@@ -85,12 +85,12 @@ model venue {
 }
 
 model discount {
-  id                  String  @id @default(uuid()) @db.Char(36)
-  event_organizer_id  String  @db.Char(36)
-  percentage          Int     @db.Integer()
-  description         String  @db.VarChar(144)
-  created_at     DateTime   @default(now()) @db.Timestamptz(6)
+  id                  String    @id @default(uuid()) @db.Char(36)
+  event_organizer_id  String?   @db.Char(36)
+  percentage          Int       @db.Integer()
+  description         String    @db.VarChar(144)
+  created_at          DateTime  @default(now()) @db.Timestamptz(6)
 
   // FK
-  event_organizer event_organizer @relation(fields: [event_organizer_id], references: [id])
+  event_organizer  event_organizer?  @relation(fields: [event_organizer_id], references: [id])
 }
