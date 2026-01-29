@@ -1,11 +1,18 @@
 import { NextFunction, Request, Response } from "express"
 import { AuthRepository } from "../repositories/auth.repository"
+import { CustomerRepository } from "../repositories/customer.repository"
+import { EventOrganizerRepository } from "../repositories/event_organizer.repository"
+import { extractUserFromAuthHeader } from "../utils/auth.util"
 
 export class AuthController {
     private authRepository: AuthRepository
+    private customerRepository: CustomerRepository
+    private eventOrganizerRepository: EventOrganizerRepository
 
     constructor(){
         this.authRepository = new AuthRepository()
+        this.customerRepository = new CustomerRepository()
+        this.eventOrganizerRepository = new EventOrganizerRepository()
     }
 
     public postLogin = async (req: Request, res: Response, next: NextFunction) => {
@@ -43,6 +50,38 @@ export class AuthController {
             return res.status(200).json({
                 message: "Token refreshed successfully",
                 data: result,
+            })
+        } catch (error: any) {
+            next(error)
+        }
+    }
+
+    public getMyProfile = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            // Get user id
+            const { userId, role } = extractUserFromAuthHeader(req.headers.authorization)
+            let result 
+    
+            switch (role) {
+                case "event_organizer":
+                    // Repo : Get event organizer by id
+                    result = await this.eventOrganizerRepository.findEventOrganizerByIdRepo(userId)
+                    break;
+                case "customer":
+                    // Repo : Get customer by id
+                    result = await this.customerRepository.findCustomerByIdRepo(userId)
+                    break;
+                default:
+                    throw { code: 409, message:  "Role not valid" }
+            }
+    
+            if (!result) throw { code: 404, message:  "User not found" }
+            const { password, ...finalRes } = result
+    
+            // Success response
+            res.status(200).json({
+                message: "Get user successful",
+                data: finalRes
             })
         } catch (error: any) {
             next(error)
