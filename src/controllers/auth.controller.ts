@@ -76,12 +76,11 @@ export class AuthController {
             }
     
             if (!result) throw { code: 404, message:  "User not found" }
-            const { password, ...finalRes } = result
     
             // Success response
             res.status(200).json({
                 message: "Get user successful",
-                data: finalRes
+                data: result
             })
         } catch (error: any) {
             next(error)
