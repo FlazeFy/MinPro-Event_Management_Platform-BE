@@ -4,6 +4,7 @@ import express, { Application, NextFunction, Request, Response } from "express"
 import cors from "cors"
 import AuthRouter from "./routes/auth.router"
 import VenueRouter from "./routes/venue.rotuer"
+import DiscountRouter from "./routes/discount.rotuer"
 
 const PORT = process.env.PORT
 
@@ -31,8 +32,10 @@ class App {
 
         const authRouter = new AuthRouter()
         const venueRouter = new VenueRouter()
+        const discountRouter = new DiscountRouter()
         this.app.use("/api/v1/auths", authRouter.getRouter())
         this.app.use("/api/v1/venues", venueRouter.getRouter())
+        this.app.use("/api/v1/discounts", discountRouter.getRouter())
     }
 
     // Error handling
