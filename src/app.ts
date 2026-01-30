@@ -3,8 +3,8 @@ dotenv.config()
 import express, { Application, NextFunction, Request, Response } from "express"
 import cors from "cors"
 import AuthRouter from "./routes/auth.router"
-import VenueRouter from "./routes/venue.rotuer"
-import DiscountRouter from "./routes/discount.rotuer"
+import VenueRouter from "./routes/venue.router"
+import DiscountRouter from "./routes/discount.router"
 
 const PORT = process.env.PORT
 
