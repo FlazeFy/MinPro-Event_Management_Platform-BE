@@ -38,5 +38,16 @@ export class DiscountRepository {
             data: { event_organizer_id, percentage, description }
         })
     }
+
+    public deleteDiscountByIdRepo = async (userId: string, discountId: string) => {
+        try {
+            return await prisma.discount.delete({
+                where: { id: discountId, event_organizer_id: userId }
+            })
+        } catch (error: any) {
+            if (error.code === "P2025") return null
+            throw error
+        }
+    } 
 }
   
