@@ -18,7 +18,7 @@ export const verifyAuthToken = (req: Request, res: Response, next: NextFunction)
 export const authorizeRole = (roles: string[]) => {
     return (req: Request, res: Response, next: NextFunction) => {
         try {
-            const user = res.locals.decript as { id: number; role: string };
+            const user = res.locals.decript as { id: number; role: string }
 
             if (!user) throw { code: 401, message: "Unauthorized" }
             if (!roles.includes(user.role)) throw { code: 403, message: "Your role is not authorized" }

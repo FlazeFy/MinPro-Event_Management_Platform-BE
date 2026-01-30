@@ -86,4 +86,47 @@ export class AuthController {
             next(error)
         }
     }
+
+    public putUpdateProfile = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            // Get user id
+            const { userId, role } = extractUserFromAuthHeader(req.headers.authorization)
+            let result, newData
+    
+            switch (role) {
+                case "event_organizer": {
+                    // Repo : Get event organizer by id
+                    result = await this.eventOrganizerRepository.findEventOrganizerByIdRepo(userId)
+                    if (!result) throw { code: 404, message:  "User not found" }
+
+                    // Repo : Update event organizer by id
+                    const { username, email, organizer_name, phone_number, address } = req.body
+                    newData = await this.eventOrganizerRepository.updateEventOrganizerByIdRepo(userId, username, email, organizer_name, phone_number, address)
+
+                    break;
+                } case "customer":
+                    // Repo : Get customer by id
+                    result = await this.customerRepository.findCustomerByIdRepo(userId)
+                    if (!result) throw { code: 404, message:  "User not found" }
+
+                    // Repo : Update event organizer by id
+                    const { username, email, fullname, phone_number, birth_date } = req.body
+                    newData = await this.customerRepository.updateCustomerByIdRepo(userId, username, email, fullname, phone_number, birth_date)
+
+                    break;
+                default:
+                    throw { code: 409, message:  "Role not valid" }
+            }
+    
+            if (!result) throw { code: 404, message:  "User not found" }
+    
+            // Success response
+            res.status(200).json({
+                message: "Update profile successful",
+                data: newData
+            })
+        } catch (error: any) {
+            next(error)
+        }
+    }
 }

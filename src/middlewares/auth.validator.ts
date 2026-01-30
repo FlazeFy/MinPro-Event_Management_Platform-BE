@@ -12,4 +12,3 @@ export const loginSchemaValidation = [
         minSymbols:0
     })
 ]
-
