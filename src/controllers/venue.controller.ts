@@ -31,4 +31,23 @@ export class VenueController {
             next(error)
         }
     }
+
+    public postCreateVenueController = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            // Request body
+            const { venue_name, venue_description, venue_address, venue_coordinate } = req.body
+    
+            // Repository : Create venue
+            const result = await this.venueRepository.createVenueRepo(venue_name, venue_description, venue_address, venue_coordinate)
+            if (!result) throw { code: 500, message:  "Something went wrong" }
+    
+            // Success response
+            res.status(201).json({
+                message: "Venue created",
+                data: result
+            })
+        } catch (error: any) {
+            next(error)
+        }
+    }
 }

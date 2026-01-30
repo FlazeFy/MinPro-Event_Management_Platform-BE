@@ -42,5 +42,16 @@ export class VenueRepository {
 
         return { data, total }
     }
+
+    public createVenueRepo = async (venue_name: string, venue_description: string, venue_address: string, venue_coordinate: string) => {
+        const isVenueNameUsed = await prisma.venue.findUnique({
+            where: { venue_name }
+        })
+        if (isVenueNameUsed) throw { code: 409, message:  "Venue name already being used. Please use an unique one" }
+        
+        return await prisma.venue.create({
+            data: { venue_name, venue_description, venue_address, venue_coordinate }
+        })
+    }
 }
   

@@ -1,6 +1,8 @@
 import { Router } from "express"
 import { VenueController } from "../controllers/venue.controller"
 import { authorizeRole, verifyAuthToken } from "../middlewares/auth.middleware"
+import { validationCheck } from "../middlewares/template.validator"
+import { venueSchemaValidation } from "../middlewares/venue.validator"
 
 export default class VenueRouter {
     private route: Router
@@ -13,9 +15,10 @@ export default class VenueRouter {
     }
 
     private initializeRoute = () => {
-        const { getAllVenueController } = this.venueController
+        const { getAllVenueController, postCreateVenueController } = this.venueController
 
         this.route.get("/", verifyAuthToken, authorizeRole(["event_organizer","customer"]), getAllVenueController)
+        this.route.post("/", verifyAuthToken, authorizeRole(["event_organizer"]), venueSchemaValidation, validationCheck, postCreateVenueController)
     }
 
     public getRouter = (): Router => {
