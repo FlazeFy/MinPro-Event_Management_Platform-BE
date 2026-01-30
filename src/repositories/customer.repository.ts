@@ -5,7 +5,7 @@ export class CustomerRepository {
         return await prisma.customer.findUnique({
             where: { id },
             select: {
-                username: true, email: true, fullname: true, created_at: true, updated_at: true, phone_number: true, points: true,
+                username: true, email: true, fullname: true, created_at: true, updated_at: true, phone_number: true, points: true, birth_date: true,
                 user_referral_code_histories: {
                     select: {
                         customer_user: {
@@ -14,6 +14,29 @@ export class CustomerRepository {
                     }
                 }
             }
+        })
+    }
+
+    public checkUniqueCustomer = async (userId: string, username?: string, email?: string, phone_number?: string) => {
+        const exists = await prisma.customer.findFirst({
+            where: {
+                OR: [
+                    username ? { username, NOT: { id: userId } } : {},
+                    email ? { email, NOT: { id: userId } } : {},
+                    phone_number ? { phone_number, NOT: { id: userId } } : {}
+                ]
+            }
+        })
+
+        if (exists) throw { code: 409, message: "Duplicate field found" }
+    }
+    
+    public updateCustomerByIdRepo = async(userId: string, username: string, email: string, fullname: string, phone_number: string, birth_date: Date) => {
+        await this.checkUniqueCustomer(userId, username, email, phone_number)
+        
+        return prisma.customer.update({
+            where: { id: userId },
+            data: { username, email, fullname, phone_number, birth_date }
         })
     }
 }

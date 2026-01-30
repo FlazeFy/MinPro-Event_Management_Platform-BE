@@ -1,8 +1,9 @@
-import { body, validationResult } from "express-validator"
-import { NextFunction, Request, Response } from "express"
+import { body } from "express-validator"
 
 export const loginSchemaValidation = [
-    body("email").notEmpty().isEmail().withMessage("Email is required"),
+    body("email").notEmpty().isEmail().withMessage("Email is required")
+        .isLength({ max: 255 }).withMessage("Email must not exceed than 255 characters")
+        .isLength({ min: 10 }).withMessage("Email must not less than 10 characters"),
     body("password").notEmpty().withMessage("Password is required").isStrongPassword({
         minLength:6,
         minLowercase:0,
@@ -11,13 +12,3 @@ export const loginSchemaValidation = [
         minSymbols:0
     })
 ]
-
-export const validationCheck = (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const errors = validationResult(req)
-        if (!errors.isEmpty()) throw { code: 400, message: errors.array() }
-        next()
-    } catch (error) {
-        next(error)
-    }
-}

@@ -32,5 +32,22 @@ export class DiscountRepository {
 
         return { data, total }
     }
+
+    public createDiscountRepo = async (event_organizer_id: string, percentage: number, description: string) => {
+        return await prisma.discount.create({
+            data: { event_organizer_id, percentage, description }
+        })
+    }
+
+    public deleteDiscountByIdRepo = async (userId: string, discountId: string) => {
+        try {
+            return await prisma.discount.delete({
+                where: { id: discountId, event_organizer_id: userId }
+            })
+        } catch (error: any) {
+            if (error.code === "P2025") return null
+            throw error
+        }
+    } 
 }
   
