@@ -17,3 +17,20 @@ export const eventOrganizerUpdateValidation = [
         .optional()
         .isLength({ max: 255 }).withMessage("Address must not exceed 255 characters"),
 ]
+
+export const eventOrganizerRegisterValidation = [
+    ...eventOrganizerUpdateValidation,
+    body("password")
+        .notEmpty().withMessage("Password is required")
+        .isLength({ max: 36 }).withMessage("Password must not exceed 36 characters")
+        .isStrongPassword({
+            minLength: 6,
+            minLowercase: 0,
+            minUppercase: 0,
+            minNumbers: 1,
+            minSymbols: 0,
+        })
+        .withMessage(
+            "Password must be at least 6 characters and include number"
+        ),
+]

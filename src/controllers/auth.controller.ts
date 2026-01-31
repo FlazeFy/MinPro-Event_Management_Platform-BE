@@ -165,4 +165,38 @@ export class AuthController {
             next(error)
         }
     }
+
+    public postRegisterEventOrganizer = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            // Body
+            const { username, email, password, password_confirmation, organizer_name, phone_number, bio, address } = req.body
+
+            // Validation password confirmation
+            if (password !== password_confirmation) throw { code: 401, message: "Password confrimation is not match" }
+
+            // Repo : Uniqueness of username or email
+            const isExist = await this.eventOrganizerRepository.checkUsernameOrEmailExistRepo(username, email)
+            if (isExist) throw { code: 409, message: "Username or email already used" }
+
+            // Repo : Register
+            const result = await this.eventOrganizerRepository.createEventOrganizerRepo(username, email, password, organizer_name, phone_number, bio, address)
+
+            // Broadcast email
+            await sendEmail(
+                email, "Question Sent",
+                announcementEmailTemplate(
+                    email.split("@")[0],
+                    `Hi ${username}, Welcome to EventKu! Your registration is complete. We hope you enjoy your experience with us`
+                )
+            )
+            
+            // Success response
+            return res.status(201).json({
+                message: "Register successful",
+                data: result,
+            })
+        } catch (error: any) {
+            next(error)
+        }
+    }
 }

@@ -3,6 +3,7 @@ import { AuthController } from "../controllers/auth.controller"
 import { authorizeRole, verifyAuthToken } from "../middlewares/auth.middleware"
 import { loginSchemaValidation } from "../middlewares/auth.validator"
 import { customerRegisterValidation } from "../middlewares/customer.validator"
+import { eventOrganizerRegisterValidation } from "../middlewares/event_organizer.validator"
 import { validationCheck, validationCheckForProfileUpdate } from "../middlewares/template.validator"
 
 export default class AuthRouter {
@@ -16,10 +17,11 @@ export default class AuthRouter {
     }
 
     private initializeRoute = () => {
-        const { postLogin, getRefreshToken, getMyProfile, putUpdateProfile, postRegisterCustomer } = this.authController
+        const { postLogin, getRefreshToken, getMyProfile, putUpdateProfile, postRegisterCustomer, postRegisterEventOrganizer } = this.authController
 
         this.route.post("/login", loginSchemaValidation, validationCheck, postLogin)
         this.route.post("/register/customer", customerRegisterValidation, validationCheck, postRegisterCustomer)
+        this.route.post("/register/event_organizer", eventOrganizerRegisterValidation, validationCheck, postRegisterEventOrganizer)
         this.route.get("/refresh", verifyAuthToken, authorizeRole(["event_organizer","customer"]), getRefreshToken)
         this.route.get("/profile", verifyAuthToken, authorizeRole(["event_organizer","customer"]), getMyProfile)
         this.route.put("/profile", verifyAuthToken, authorizeRole(["event_organizer","customer"]), validationCheckForProfileUpdate, putUpdateProfile)

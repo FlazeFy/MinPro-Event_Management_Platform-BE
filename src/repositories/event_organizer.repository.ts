@@ -74,4 +74,23 @@ export class EventOrganizerRepository {
 
         return { data, total }
     }
+
+    public checkUsernameOrEmailExistRepo = async (username: string, email: string) => {
+        return await prisma.event_organizer.findFirst({
+            where: {
+                OR: [
+                    { username }, { email },
+                ],
+            },
+            select: {
+                id: true, username: true, email: true,
+            },
+        })
+    }
+
+    public createEventOrganizerRepo = async (username: string, email: string, password: string, organizer_name: string, phone_number: string, bio: string, address: string) => {
+        return await prisma.event_organizer.create({
+            data: { username, email, password, organizer_name, phone_number, bio, address }
+        })
+    }
 }
