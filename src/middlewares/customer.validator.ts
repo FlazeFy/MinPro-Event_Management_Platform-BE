@@ -15,5 +15,22 @@ export const customerUpdateValidation = [
         .isLength({ max: 16 }).withMessage("Phone number must not exceed 16 characters"),
     body("birth_date")
         .isISO8601().withMessage("Birth date must be a valid ISO8601 date"),
-  ]
+]
+  
+export const customerRegisterValidation = [
+    ...customerUpdateValidation,
+    body("password")
+        .notEmpty().withMessage("Password is required")
+        .isLength({ max: 36 }).withMessage("Password must not exceed 36 characters")
+        .isStrongPassword({
+            minLength: 6,
+            minLowercase: 0,
+            minUppercase: 0,
+            minNumbers: 1,
+            minSymbols: 0,
+        })
+        .withMessage(
+            "Password must be at least 6 characters and include number"
+        ),
+]
   

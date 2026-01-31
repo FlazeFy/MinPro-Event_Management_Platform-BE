@@ -17,6 +17,25 @@ export class CustomerRepository {
         })
     }
 
+    public checkUsernameOrEmailExistRepo = async (username: string, email: string) => {
+        return await prisma.customer.findFirst({
+            where: {
+                OR: [
+                    { username }, { email },
+                ],
+            },
+            select: {
+                id: true, username: true, email: true,
+            },
+        })
+    }
+
+    public createCustomerRepo = async (username: string, email: string, password: string, fullname: string, phone_number: string, birth_date: string) => {
+        return await prisma.customer.create({
+            data: { username, email, password, fullname, phone_number, birth_date }
+        })
+    }
+
     public checkUniqueCustomer = async (userId: string, username?: string, email?: string, phone_number?: string) => {
         const exists = await prisma.customer.findFirst({
             where: {
