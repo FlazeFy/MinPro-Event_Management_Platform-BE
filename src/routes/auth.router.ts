@@ -2,6 +2,7 @@ import { Router } from "express"
 import { AuthController } from "../controllers/auth.controller"
 import { authorizeRole, verifyAuthToken } from "../middlewares/auth.middleware"
 import { loginSchemaValidation } from "../middlewares/auth.validator"
+import { customerRegisterValidation } from "../middlewares/customer.validator"
 import { validationCheck, validationCheckForProfileUpdate } from "../middlewares/template.validator"
 
 export default class AuthRouter {
@@ -15,9 +16,10 @@ export default class AuthRouter {
     }
 
     private initializeRoute = () => {
-        const { postLogin, getRefreshToken, getMyProfile, putUpdateProfile } = this.authController
+        const { postLogin, getRefreshToken, getMyProfile, putUpdateProfile, postRegisterCustomer } = this.authController
 
         this.route.post("/login", loginSchemaValidation, validationCheck, postLogin)
+        this.route.post("/register/customer", customerRegisterValidation, validationCheck, postRegisterCustomer)
         this.route.get("/refresh", verifyAuthToken, authorizeRole(["event_organizer","customer"]), getRefreshToken)
         this.route.get("/profile", verifyAuthToken, authorizeRole(["event_organizer","customer"]), getMyProfile)
         this.route.put("/profile", verifyAuthToken, authorizeRole(["event_organizer","customer"]), validationCheckForProfileUpdate, putUpdateProfile)

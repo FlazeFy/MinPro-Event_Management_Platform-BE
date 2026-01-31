@@ -2,7 +2,9 @@ import { NextFunction, Request, Response } from "express"
 import { AuthRepository } from "../repositories/auth.repository"
 import { CustomerRepository } from "../repositories/customer.repository"
 import { EventOrganizerRepository } from "../repositories/event_organizer.repository"
+import { announcementEmailTemplate } from "../templates/announcement.template"
 import { extractUserFromAuthHeader } from "../utils/auth.util"
+import { sendEmail } from "../utils/mailer.util"
 
 export class AuthController {
     private authRepository: AuthRepository
@@ -124,6 +126,40 @@ export class AuthController {
             res.status(200).json({
                 message: "Update profile successful",
                 data: newData
+            })
+        } catch (error: any) {
+            next(error)
+        }
+    }
+
+    public postRegisterCustomer = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            // Body
+            const { username, email, password, password_confirmation, fullname, phone_number, birth_date } = req.body
+
+            // Validation password confirmation
+            if (password !== password_confirmation) throw { code: 401, message: "Password confrimation is not match" }
+
+            // Repo : Uniqueness of username or email
+            const isExist = await this.customerRepository.checkUsernameOrEmailExistRepo(username, email)
+            if (isExist) throw { code: 409, message: "Username or email already used" }
+
+            // Repo : Register
+            const result = await this.customerRepository.createCustomerRepo(username, email, password, fullname, phone_number, birth_date)
+
+            // Broadcast email
+            await sendEmail(
+                email, "Question Sent",
+                announcementEmailTemplate(
+                    email.split("@")[0],
+                    `Hi ${username}, Welcome to EventKu! Your registration is complete. We hope you enjoy your experience with us`
+                )
+            )
+            
+            // Success response
+            return res.status(201).json({
+                message: "Register successful",
+                data: result,
             })
         } catch (error: any) {
             next(error)
