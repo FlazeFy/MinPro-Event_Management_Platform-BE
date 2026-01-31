@@ -15,5 +15,5 @@ export const customerUpdateValidation = [
         .isLength({ max: 16 }).withMessage("Phone number must not exceed 16 characters"),
     body("birth_date")
         .isISO8601().withMessage("Birth date must be a valid ISO8601 date"),
-  ]
+]
   

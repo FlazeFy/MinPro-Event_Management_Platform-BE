@@ -5,6 +5,7 @@ import cors from "cors"
 import AuthRouter from "./routes/auth.router"
 import VenueRouter from "./routes/venue.router"
 import DiscountRouter from "./routes/discount.router"
+import EventOrganizerRouter from "./routes/event_organizer.router"
 
 const PORT = process.env.PORT
 
@@ -33,9 +34,11 @@ class App {
         const authRouter = new AuthRouter()
         const venueRouter = new VenueRouter()
         const discountRouter = new DiscountRouter()
+        const eventOrganizerRouter = new EventOrganizerRouter()
         this.app.use("/api/v1/auths", authRouter.getRouter())
         this.app.use("/api/v1/venues", venueRouter.getRouter())
         this.app.use("/api/v1/discounts", discountRouter.getRouter())
+        this.app.use("/api/v1/event_organizers", eventOrganizerRouter.getRouter())
     }
 
     // Error handling
