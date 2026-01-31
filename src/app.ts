@@ -6,6 +6,7 @@ import AuthRouter from "./routes/auth.router"
 import VenueRouter from "./routes/venue.router"
 import DiscountRouter from "./routes/discount.router"
 import EventOrganizerRouter from "./routes/event_organizer.router"
+import { auditError } from "./utils/audit.util"
 
 const PORT = process.env.PORT
 
@@ -44,7 +45,20 @@ class App {
     // Error handling
     private errorHandler = () => {
         this.app.use((err: any, req: Request, res: Response, next:NextFunction) => {
-            res.status(err.code || 500).send(err)
+            const statusCode = err.code || 500
+
+            // Audit server error
+            if (statusCode === 500) {
+                auditError(err, req)
+
+                return res.status(500).json({
+                    message: "Something went wrong",
+                })
+            }
+
+            return res.status(statusCode).json({
+                message: err.message,
+            })
         })
     }
 
