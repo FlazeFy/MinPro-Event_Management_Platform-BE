@@ -1,4 +1,5 @@
 import { prisma } from '../configs/prisma'
+import { Prisma } from '../generated/prisma/client'
 
 export class EventOrganizerRepository {
     public findEventOrganizerByIdRepo = async (id: string) => {
@@ -36,6 +37,60 @@ export class EventOrganizerRepository {
         return prisma.event_organizer.update({
             where: { id: userId },
             data: { username, email, organizer_name, phone_number, address }
+        })
+    }
+
+    public findAllEventOrganizerRepo = async (page: number, limit: number, search: string | null, eventOrganizerId: string | null) => {
+        const skip = (page - 1) * limit
+        const where: Prisma.event_organizerWhereInput = {
+            ...(search && {
+                organizer_name: {
+                    contains: search,
+                    mode: Prisma.QueryMode.insensitive,
+                },
+                bio: {
+                    contains: search,
+                    mode: Prisma.QueryMode.insensitive,
+                },
+            })
+        }
+
+        const [data, total] = await Promise.all([
+            prisma.event_organizer.findMany({
+                where,
+                skip,
+                take: limit,
+                orderBy: {
+                    organizer_name: 'desc'
+                },
+                select: {
+                    id: true, email: true, organizer_name: true, phone_number: true, address: true, bio: true
+                }
+            }),
+            prisma.event_organizer.count({
+                where,
+            }),
+        ])
+
+        return { data, total }
+    }
+
+    public checkUsernameOrEmailExistRepo = async (username: string, email: string) => {
+        return await prisma.event_organizer.findFirst({
+            where: {
+                OR: [
+                    { username }, { email },
+                ],
+            },
+            select: {
+                id: true, username: true, email: true,
+            },
+        })
+    }
+
+    public createEventOrganizerRepo = async (username: string, email: string, password: string, organizer_name: string, phone_number: string, bio: string, address: string) => {
+        return await prisma.event_organizer.create({
+            data: { username, email, password, organizer_name, phone_number, bio, address }
         })
     }
 }
