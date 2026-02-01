@@ -19,6 +19,11 @@ enum SocialMediaPlatform {
   facebook
 }
 
+enum EventCategory {
+  concert
+  live_music
+  theater 
+} 
 model customer {
   id            String     @id @default(uuid()) @db.Char(36)
   username      String     @db.Char(36)
@@ -63,6 +68,24 @@ model event_organizer {
   // Relations 
   social_medias social_media[]
   discounts     discount[]
+  events        event[]
+}
+
+model event {
+  id String @id @default(uuid()) @db.Char(36)
+  event_organizer_id String @db.Char(36) 
+  event_title String @db.VarChar(144)
+  event_desc String @db.VarChar(500)
+  event_category EventCategory
+  event_price Int @default(0) @db.Integer()
+  is_paid Boolean @db.Boolean
+  maximum_seat Int @default(0) @db.Integer()
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @updatedAt @db.Timestamptz(6)
+  deleted_at DateTime? @updatedAt @db.Timestamptz(6)
+  
+  // FK 
+  event_organizer event_organizer @relation(fields: [event_organizer_id], references: [id])
 }
 
 model social_media {

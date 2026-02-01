@@ -7,6 +7,7 @@ import VenueRouter from "./routes/venue.router"
 import DiscountRouter from "./routes/discount.router"
 import EventOrganizerRouter from "./routes/event_organizer.router"
 import { auditError } from "./utils/audit.util"
+import EventRouter from "./routes/event.router"
 
 const PORT = process.env.PORT
 
@@ -36,10 +37,12 @@ class App {
         const venueRouter = new VenueRouter()
         const discountRouter = new DiscountRouter()
         const eventOrganizerRouter = new EventOrganizerRouter()
+        const event = new EventRouter()
         this.app.use("/api/v1/auths", authRouter.getRouter())
         this.app.use("/api/v1/venues", venueRouter.getRouter())
         this.app.use("/api/v1/discounts", discountRouter.getRouter())
         this.app.use("/api/v1/event_organizers", eventOrganizerRouter.getRouter())
+        this.app.use("/api/v1/events", event.getRouter())
     }
 
     // Error handling
