@@ -31,7 +31,7 @@ class EventSeeder {
                 event_title: faker.music.songName(),
                 event_desc: faker.lorem.paragraph(),
                 event_category: this.randomEventCategory(),
-                event_price: is_paid ? BigInt(faker.number.int({ min: 50_000, max: 2_000_000 })) : 0,
+                event_price: is_paid ? faker.number.int({ min: 50_000, max: 2_000_000 }) : 0,
                 is_paid,
                 maximum_seat: faker.number.int({ min: 100, max: 2_000 }),
                 created_at: faker.date.past({ years: 3 }),

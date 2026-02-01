@@ -13,9 +13,10 @@ export default class EventRouter {
     }
 
     private initializeRoute = () => {
-        const { hardDeleteEventByIdController } = this.eventController
+        const { hardDeleteEventByIdController, getAllEventController } = this.eventController
 
         this.route.delete("/:id", verifyAuthToken, authorizeRole(["event_organizer"]), hardDeleteEventByIdController)
+        this.route.get("/", verifyAuthToken, authorizeRole(["event_organizer", "user"]), getAllEventController)
     }
 
     public getRouter = (): Router => {
