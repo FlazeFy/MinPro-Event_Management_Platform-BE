@@ -73,19 +73,35 @@ model event_organizer {
 
 model event {
   id String @id @default(uuid()) @db.Char(36)
-  event_organizer_id String @db.Char(36) 
-  event_title String @db.VarChar(144)
-  event_desc String @db.VarChar(500)
-  event_category EventCategory
-  event_price Int @default(0) @db.Integer()
-  is_paid Boolean @db.Boolean
-  maximum_seat Int @default(0) @db.Integer()
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime? @updatedAt @db.Timestamptz(6)
-  deleted_at DateTime? @updatedAt @db.Timestamptz(6)
+  event_organizer_id    String @db.Char(36) 
+  event_title           String @db.VarChar(144)
+  event_desc            String @db.VarChar(500)
+  event_category        EventCategory
+  event_price           Int @default(0) @db.Integer()
+  is_paid               Boolean @db.Boolean
+  maximum_seat          Int @default(0) @db.Integer()
+  created_at            DateTime @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime? @updatedAt @db.Timestamptz(6)
+  deleted_at            DateTime? @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  event_schedule event_schedule[]
   
   // FK 
   event_organizer event_organizer @relation(fields: [event_organizer_id], references: [id])
+}
+
+model event_schedule {
+  id String @id @default(uuid()) @db.Char(36)
+  venue_id String @db.Char(36)
+  event_id String @db.Char(36)
+  description String? @db.VarChar(144)
+  start_date DateTime @db.Timestamptz(6)
+  end_date DateTime @db.Timestamptz(6)
+
+  // FK 
+  event event @relation(fields: [event_id], references: [id])
+  venue venue @relation(fields: [venue_id], references: [id])
 }
 
 model social_media {
@@ -105,6 +121,9 @@ model venue {
   venue_address     String    @db.VarChar(500)
   venue_coordinate  String    @db.Char(144)
   created_at        DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  event_schedules event_schedule[]
 }
 
 model discount {
