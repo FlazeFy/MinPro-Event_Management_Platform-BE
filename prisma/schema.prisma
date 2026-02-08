@@ -54,6 +54,21 @@ model transaction {
   
   // FK 
   customer customer @relation(fields: [customer_id], references: [id])
+  // Relations
+  reviews review[]
+  attendees attendee[]
+}
+
+model attendee {
+  id              String  @id @default(uuid()) @db.Char(36)
+  transaction_id  String  @db.Char(36)
+  fullname        String  @db.Char(75)
+  phone_number    String  @db.Char(16)
+
+  // FK
+  transaction transaction @relation(fields: [transaction_id], references: [id])
+}
+
 model review {
   id              String    @id @default(uuid()) @db.Char(36)
   transaction_id  String    @db.Char(36)
