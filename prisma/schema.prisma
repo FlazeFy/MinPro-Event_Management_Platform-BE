@@ -54,6 +54,15 @@ model transaction {
   
   // FK 
   customer customer @relation(fields: [customer_id], references: [id])
+model review {
+  id              String    @id @default(uuid()) @db.Char(36)
+  transaction_id  String    @db.Char(36)
+  review_body     String    @db.Char(300)
+  review_rate     Int       @db.Integer()
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+
+  // FK
+  transaction transaction @relation(fields: [transaction_id], references: [id]) 
 }
 
 model referral_code_history {
