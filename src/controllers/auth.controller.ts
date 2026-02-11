@@ -3,7 +3,7 @@ import { AuthRepository } from "../repositories/auth.repository"
 import { CustomerRepository } from "../repositories/customer.repository"
 import { EventOrganizerRepository } from "../repositories/event_organizer.repository"
 import { announcementEmailTemplate } from "../templates/announcement.template"
-import { extractUserFromAuthHeader } from "../utils/auth.util"
+import { extractUserFromAuthHeader, hashPassword } from "../utils/auth.util"
 import { sendEmail } from "../utils/mailer.util"
 
 export class AuthController {
@@ -144,8 +144,12 @@ export class AuthController {
             const isExist = await this.customerRepository.checkUsernameOrEmailExistRepo(username, email)
             if (isExist) throw { code: 409, message: "Username or email already used" }
 
+            // Image upload
+            const filePath = req.file ? `/images/${req.file.filename}`: null
+
             // Repo : Register
-            const result = await this.customerRepository.createCustomerRepo(username, email, password, fullname, phone_number, birth_date)
+            const hashedPassword = await hashPassword(password)
+            const result = await this.customerRepository.createCustomerRepo(username, email, hashedPassword, fullname, phone_number, birth_date, filePath)
 
             // Broadcast email
             await sendEmail(
@@ -178,8 +182,12 @@ export class AuthController {
             const isExist = await this.eventOrganizerRepository.checkUsernameOrEmailExistRepo(username, email)
             if (isExist) throw { code: 409, message: "Username or email already used" }
 
+            // Image upload
+            const filePath = req.file ? `/images/${req.file.filename}`: null
+
             // Repo : Register
-            const result = await this.eventOrganizerRepository.createEventOrganizerRepo(username, email, password, organizer_name, phone_number, bio, address)
+            const hashedPassword = await hashPassword(password)
+            const result = await this.eventOrganizerRepository.createEventOrganizerRepo(username, email, hashedPassword, organizer_name, phone_number, bio, address, filePath)
 
             // Broadcast email
             await sendEmail(

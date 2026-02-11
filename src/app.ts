@@ -8,6 +8,8 @@ import DiscountRouter from "./routes/discount.router"
 import EventOrganizerRouter from "./routes/event_organizer.router"
 import { auditError } from "./utils/audit.util"
 import EventRouter from "./routes/event.router"
+import path from "path"
+import multer from "multer"
 
 const PORT = process.env.PORT
 
@@ -25,6 +27,7 @@ class App {
     private configure = () => {
         this.app.use(cors())
         this.app.use(express.json())
+        this.app.use(express.static(path.join(__dirname,"public")))
     }
 
     // Route configuration
@@ -48,8 +51,14 @@ class App {
     // Error handling
     private errorHandler = () => {
         this.app.use((err: any, req: Request, res: Response, next:NextFunction) => {
-            const statusCode = err.code || 500
-
+            // Multer file upload limit size
+            if (err.code === "LIMIT_FILE_SIZE") {
+                return res.status(400).json({
+                    message: "File size exceeds 2MB limit"
+                })
+            }
+    
+            const statusCode = err.status || err.code || 500
             // Audit server error
             if (statusCode === 500) {
                 auditError(err, req)

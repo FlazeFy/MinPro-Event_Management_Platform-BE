@@ -16,7 +16,7 @@ export default class EventRouter {
         const { hardDeleteEventByIdController, getAllEventController } = this.eventController
 
         this.route.delete("/:id", verifyAuthToken, authorizeRole(["event_organizer"]), hardDeleteEventByIdController)
-        this.route.get("/", verifyAuthToken, authorizeRole(["event_organizer", "user"]), getAllEventController)
+        this.route.get("/", verifyAuthToken, authorizeRole(["event_organizer", "customer"]), getAllEventController)
     }
 
     public getRouter = (): Router => {
