@@ -30,9 +30,9 @@ export class CustomerRepository {
         })
     }
 
-    public createCustomerRepo = async (username: string, email: string, password: string, fullname: string, phone_number: string, birth_date: string) => {
+    public createCustomerRepo = async (username: string, email: string, password: string, fullname: string, phone_number: string, birth_date: string, profile_pic: string | null) => {
         return await prisma.customer.create({
-            data: { username, email, password, fullname, phone_number, birth_date }
+            data: { username, email, password, fullname, phone_number, birth_date, profile_pic }
         })
     }
 

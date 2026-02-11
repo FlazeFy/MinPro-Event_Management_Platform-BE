@@ -199,9 +199,9 @@ export class EventOrganizerRepository {
         })
     }
 
-    public createEventOrganizerRepo = async (username: string, email: string, password: string, organizer_name: string, phone_number: string, bio: string, address: string) => {
+    public createEventOrganizerRepo = async (username: string, email: string, password: string, organizer_name: string, phone_number: string, bio: string, address: string, profile_pic: string | null) => {
         return await prisma.event_organizer.create({
-            data: { username, email, password, organizer_name, phone_number, bio, address }
+            data: { username, email, password, organizer_name, phone_number, bio, address, profile_pic }
         })
     }
 }

@@ -4,3 +4,4 @@
 /prisma/migrations
 /src/generated/prisma
 /logs
+/src/public
