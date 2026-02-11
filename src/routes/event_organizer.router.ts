@@ -12,9 +12,10 @@ export default class EventOrganizerRouter {
     }
 
     private initializeRoute = () => {
-        const { getAllEventOrganizerController } = this.eventOrganizerController
+        const { getAllEventOrganizerController, getEventOrganizerDetailByIdController } = this.eventOrganizerController
 
         this.route.get("/", getAllEventOrganizerController)
+        this.route.get("/:id", getEventOrganizerDetailByIdController)
     }
 
     public getRouter = (): Router => {

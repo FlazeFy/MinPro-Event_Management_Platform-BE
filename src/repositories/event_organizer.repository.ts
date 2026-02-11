@@ -75,6 +75,52 @@ export class EventOrganizerRepository {
         return { data, total }
     }
 
+    public findEventOrganizerDetailByIdRepo = async (id: string, page: number, limit: number, search: string | null, event_category: string | null, price_max: number | null, price_min: number | null) => {
+        const skip = (page - 1) * limit
+        const eventWhereClause: any = {
+            event_organizer_id: id,
+        }
+
+        if (search) {
+            eventWhereClause.OR = [
+                { event_title: { contains: search, mode: "insensitive" } },
+                { event_desc: { contains: search, mode: "insensitive" } },
+            ]
+        }
+        if (event_category) eventWhereClause.event_category = event_category
+        if (price_min !== null || price_max !== null) {
+            eventWhereClause.event_price = {}
+            if (price_min !== null) eventWhereClause.event_price.gte = price_min
+            if (price_max !== null) eventWhereClause.event_price.lte = price_max
+        }
+
+        const [data, total] = await Promise.all([
+            prisma.event_organizer.findMany({
+                where: { id },
+                select: {
+                    organizer_name: true, email: true, address: true, phone_number: true, bio: true, created_at: true,
+                    events: {
+                        where: eventWhereClause,
+                        skip,
+                        take: limit,
+                        select: {
+                            event_title: true, event_desc: true, event_category: true, event_price: true, created_at: true
+                        },
+                        orderBy: [
+                            { event_price: 'asc' },
+                            { created_at: 'desc' }
+                        ]
+                    },
+                }
+            }),
+            prisma.event.count({
+                where: eventWhereClause,
+            })
+        ])
+
+        return { data, total }
+    }
+
     public checkUsernameOrEmailExistRepo = async (username: string, email: string) => {
         return await prisma.event_organizer.findFirst({
             where: {
