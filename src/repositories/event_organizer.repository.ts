@@ -121,6 +121,71 @@ export class EventOrganizerRepository {
         return { data, total }
     }
 
+    private findEventOrganizerById = async (id: string) => {
+        return prisma.event_organizer.findUnique({
+            where: { id },
+            select: { id: true, organizer_name: true }
+        })
+    }
+    public findTrendingEventOrganizerRepo = async () => {
+        // Event organizer with most event
+        const mostEvents = await prisma.event_organizer.findFirst({
+            orderBy: {
+                events: { _count: "desc" },
+            },
+            select: {
+                id: true, organizer_name: true,
+                _count: {
+                    select: { events: true },
+                },
+            },
+        })
+
+        // Event organizer with most free event
+        const mostFree = await prisma.event.groupBy({
+            by: ["event_organizer_id"],
+            where: { event_price: 0 },
+            _count: { event_organizer_id: true },
+            orderBy: {
+                _count: { event_organizer_id: "desc" },
+            },
+            take: 1,
+        })
+        const mostFreeOrganizer = mostFree.length > 0 ? await this.findEventOrganizerById(mostFree[0].event_organizer_id) : null
+      
+        // Event organizer with highest event price average
+        const highestAvg = await prisma.event.groupBy({
+            by: ["event_organizer_id"],
+            _avg: { event_price: true },
+            orderBy: {
+                _avg: { event_price: "desc" },
+            },
+            take: 1,
+        })
+        const highestAvgOrganizer = highestAvg.length > 0 ? await this.findEventOrganizerById(highestAvg[0].event_organizer_id) : null
+      
+        // Event organizer with lowest event price average
+        const lowestAvg = await prisma.event.groupBy({
+            by: ["event_organizer_id"],
+            where: {
+                event_price: { gt: 0 },
+            },
+            _avg: { event_price: true },
+            orderBy: {
+                _avg: { event_price: "asc" },
+            },
+            take: 1,
+        })
+        const lowestAvgOrganizer = lowestAvg.length > 0 ? await this.findEventOrganizerById(lowestAvg[0].event_organizer_id) : null
+      
+        return {
+            most_events: mostEvents ? { id: mostEvents.id, organizer_name: mostEvents.organizer_name, value: mostEvents._count.events } : null,
+            most_free_event: mostFreeOrganizer ? { ...mostFreeOrganizer, value: mostFree[0]._count.event_organizer_id } : null,
+            highest_average_price: highestAvgOrganizer ? { ...highestAvgOrganizer, value: Math.round(highestAvg[0]._avg.event_price ?? 0) } : null,
+            lowest_average_price: lowestAvgOrganizer ? { ...lowestAvgOrganizer, value: Math.round(lowestAvg[0]._avg.event_price ?? 0) } : null,
+        }
+    } 
+
     public checkUsernameOrEmailExistRepo = async (username: string, email: string) => {
         return await prisma.event_organizer.findFirst({
             where: {

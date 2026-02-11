@@ -62,4 +62,19 @@ export class EventOrganizerController {
             next(error)
         }
     }
+
+    public getTrendingEventOrganizer = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            // Repository : Get trending event organizer
+            const result = await this.eventOrganizerRepository.findTrendingEventOrganizerRepo()
+    
+            // Success response
+            res.status(200).json({
+                message: "Get event organizer successful",
+                data: result
+            })
+        } catch (error: any) {
+            next(error)
+        }
+    }
 }
