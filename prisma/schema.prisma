@@ -58,6 +58,7 @@ model transaction {
   // Relations
   reviews review[]
   attendees attendee[]
+  used_discounts used_discount[]
 }
 
 model attendee {
@@ -123,12 +124,11 @@ model event {
   created_at            DateTime @default(now()) @db.Timestamptz(6)
   updated_at            DateTime? @updatedAt @db.Timestamptz(6)
   deleted_at            DateTime? @updatedAt @db.Timestamptz(6)
-
-  // Relations
-  event_schedule event_schedule[]
-  
+ 
   // FK 
   event_organizer event_organizer @relation(fields: [event_organizer_id], references: [id])
+   // Relations
+  event_schedule event_schedule[]
 }
 
 model event_schedule {
@@ -175,4 +175,16 @@ model discount {
 
   // FK
   event_organizer  event_organizer?  @relation(fields: [event_organizer_id], references: [id])
+  // Relations
+  used_discount used_discount[]
+}
+
+model used_discount {
+  id                String    @id @default(uuid()) @db.Char(36)
+  transaction_id    String    @db.Char(36)
+  discount_id       String    @db.Char(36)
+
+  // FK 
+  transaction transaction @relation(fields: [transaction_id], references: [id])
+  discount discount @relation(fields: [discount_id], references: [id])    
 }
