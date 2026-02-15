@@ -7,6 +7,8 @@ import ReferralCodeHistorySeeder from "./seeders/referral_code_history.seeder"
 import SocialMediaSeeder from "./seeders/social_media.seeder"
 import VenueSeeder from "./seeders/venue.seeder"
 import EventSeeder from "./seeders/event.seeder"
+import EventScheduleSeeder from "./seeders/event_schedule.seeder"
+import TransactionSeeder from "./seeders/transaction.seeder"
 
 class Seeder {
     private customerSeeder = new CustomerSeeder()
@@ -16,9 +18,13 @@ class Seeder {
     private refCodeSeeder = new ReferralCodeHistorySeeder()
     private discountSeeder = new DiscountSeeder()
     private eventSeeder = new EventSeeder()
+    private eventScheduleSeeder = new EventScheduleSeeder()
+    private transactionSeeder = new TransactionSeeder()
     private password = "nopass123"
 
     private clearAllTables = async () => {
+        await prisma.transaction.deleteMany()
+        await prisma.event_schedule.deleteMany()
         await prisma.event.deleteMany()
         await prisma.discount.deleteMany()
         await prisma.referral_code_history.deleteMany()
@@ -40,6 +46,8 @@ class Seeder {
             await this.socialMediaSeeder.createMany(20)
             await this.discountSeeder.createMany(10)
             await this.eventSeeder.createMany(50)
+            await this.eventScheduleSeeder.createMany(50)
+            await this.transactionSeeder.createMany(20)
             await this.refCodeSeeder.createMany(100)
         } catch (err) {
             console.error(err)

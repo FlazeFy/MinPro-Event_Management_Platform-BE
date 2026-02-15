@@ -41,6 +41,45 @@ model customer {
   // Relations 
   owner_referral_code_histories referral_code_history[] @relation("OwnerReferralHistory")
   user_referral_code_histories  referral_code_history[] @relation("UserReferralHistory")
+  transactions                  transaction[]
+}
+
+model transaction {
+  id              String    @id @default(uuid()) @db.Char(36)
+  customer_id     String    @db.Char(36)
+  event_id        String    @db.Char(36)
+  payment_method  String    @db.Char(16)
+  amount          Int       @default(0) @db.Integer()
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  paid_off_at     DateTime? @updatedAt @db.Timestamptz(6) 
+  
+  // FK 
+  customer customer @relation(fields: [customer_id], references: [id])
+  // Relations
+  reviews review[]
+  attendees attendee[]
+  used_discounts used_discount[]
+}
+
+model attendee {
+  id              String  @id @default(uuid()) @db.Char(36)
+  transaction_id  String  @db.Char(36)
+  fullname        String  @db.Char(75)
+  phone_number    String  @db.Char(16)
+
+  // FK
+  transaction transaction @relation(fields: [transaction_id], references: [id])
+}
+
+model review {
+  id              String    @id @default(uuid()) @db.Char(36)
+  transaction_id  String    @db.Char(36)
+  review_body     String    @db.Char(300)
+  review_rate     Int       @db.Integer()
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+
+  // FK
+  transaction transaction @relation(fields: [transaction_id], references: [id]) 
 }
 
 model referral_code_history {
@@ -75,19 +114,34 @@ model event_organizer {
 
 model event {
   id String @id @default(uuid()) @db.Char(36)
-  event_organizer_id String @db.Char(36) 
-  event_title String @db.VarChar(144)
-  event_desc String @db.VarChar(500)
-  event_category EventCategory
-  event_price Int @default(0) @db.Integer()
-  is_paid Boolean @db.Boolean
-  maximum_seat Int @default(0) @db.Integer()
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime? @updatedAt @db.Timestamptz(6)
-  deleted_at DateTime? @updatedAt @db.Timestamptz(6)
-  
+  event_organizer_id    String @db.Char(36) 
+  event_title           String @db.VarChar(144)
+  event_desc            String @db.VarChar(500)
+  event_category        EventCategory
+  event_price           Int @default(0) @db.Integer()
+  is_paid               Boolean @db.Boolean
+  maximum_seat          Int @default(0) @db.Integer()
+  created_at            DateTime @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime? @updatedAt @db.Timestamptz(6)
+  deleted_at            DateTime? @updatedAt @db.Timestamptz(6)
+ 
   // FK 
   event_organizer event_organizer @relation(fields: [event_organizer_id], references: [id])
+   // Relations
+  event_schedule event_schedule[]
+}
+
+model event_schedule {
+  id String @id @default(uuid()) @db.Char(36)
+  venue_id String @db.Char(36)
+  event_id String @db.Char(36)
+  description String? @db.VarChar(144)
+  start_date DateTime @db.Timestamptz(6)
+  end_date DateTime @db.Timestamptz(6)
+
+  // FK 
+  event event @relation(fields: [event_id], references: [id])
+  venue venue @relation(fields: [venue_id], references: [id])
 }
 
 model social_media {
@@ -107,6 +161,9 @@ model venue {
   venue_address     String    @db.VarChar(500)
   venue_coordinate  String    @db.Char(144)
   created_at        DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  event_schedules event_schedule[]
 }
 
 model discount {
@@ -118,4 +175,16 @@ model discount {
 
   // FK
   event_organizer  event_organizer?  @relation(fields: [event_organizer_id], references: [id])
+  // Relations
+  used_discount used_discount[]
+}
+
+model used_discount {
+  id                String    @id @default(uuid()) @db.Char(36)
+  transaction_id    String    @db.Char(36)
+  discount_id       String    @db.Char(36)
+
+  // FK 
+  transaction transaction @relation(fields: [transaction_id], references: [id])
+  discount discount @relation(fields: [discount_id], references: [id])    
 }
