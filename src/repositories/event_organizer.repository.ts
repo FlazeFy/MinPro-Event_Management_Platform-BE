@@ -67,9 +67,7 @@ export class EventOrganizerRepository {
                     id: true, email: true, organizer_name: true, phone_number: true, address: true, bio: true
                 }
             }),
-            prisma.event_organizer.count({
-                where,
-            }),
+            prisma.event_organizer.count({ where }),
         ])
 
         return { data, total }
@@ -113,9 +111,7 @@ export class EventOrganizerRepository {
                     },
                 }
             }),
-            prisma.event.count({
-                where: eventWhereClause,
-            })
+            prisma.event.count({ where: eventWhereClause })
         ])
 
         return { data, total }

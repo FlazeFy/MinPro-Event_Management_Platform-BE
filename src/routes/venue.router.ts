@@ -21,7 +21,5 @@ export default class VenueRouter {
         this.route.post("/", verifyAuthToken, authorizeRole(["event_organizer"]), venueSchemaValidation, validationCheck, postCreateVenueController)
     }
 
-    public getRouter = (): Router => {
-        return this.route
-    }
+    public getRouter = (): Router => this.route
 }

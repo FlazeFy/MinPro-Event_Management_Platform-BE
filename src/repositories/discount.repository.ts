@@ -25,9 +25,7 @@ export class DiscountRepository {
                     percentage: 'desc'
                 },
             }),
-            prisma.discount.count({
-                where,
-            }),
+            prisma.discount.count({ where }),
         ])
 
         return { data, total }

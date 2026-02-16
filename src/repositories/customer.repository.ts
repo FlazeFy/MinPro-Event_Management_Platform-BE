@@ -5,14 +5,14 @@ export class CustomerRepository {
         return await prisma.customer.findUnique({
             where: { id },
             select: {
-                username: true, email: true, fullname: true, created_at: true, updated_at: true, phone_number: true, points: true, birth_date: true,
-                user_referral_code_histories: {
+                username: true, email: true, fullname: true, created_at: true, updated_at: true, phone_number: true, points: true, birth_date: true, referral_code: true,
+                owner_referral_code_histories: {
                     select: {
                         customer_user: {
-                            select: { username: true }
+                            select: { username: true, id: true, created_at: true }
                         }
                     }
-                }
+                },
             }
         })
     }

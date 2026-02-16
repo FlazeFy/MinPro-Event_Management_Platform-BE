@@ -26,9 +26,7 @@ export class EventRepository {
                     created_at: 'desc'
                 },
             }),
-            prisma.event.count({
-                where,
-            }),
+            prisma.event.count({ where }),
         ])
 
         return { data, total }

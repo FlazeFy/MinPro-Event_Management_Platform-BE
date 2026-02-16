@@ -82,7 +82,7 @@ export class AuthRepository {
             return {
                 name: customer.username,
                 email: customer.email,
-                role: "user",
+                role: "customer",
                 token
             }
         }
