@@ -18,9 +18,10 @@ export class TransactionController {
             const page = Number(req.query.page) || 1
             const limit = Number(req.query.limit) || 14
             const search = typeof req.query.search === 'string' ? req.query.search.trim() : null
+            const status = typeof req.query.status === 'string' ? req.query.status.trim() : null
     
             // Repository : Get all transaction
-            const result = await this.transactionRepository.findAllTransactionRepo(page, limit, search, userId)
+            const result = await this.transactionRepository.findAllTransactionRepo(page, limit, search, status === "all" ? null : status, userId)
             if (!result) throw { code: 404, message:  "Transaction not found" }
     
             // Success response

@@ -44,7 +44,7 @@ export class TransactionRepository {
         return { labels: sortedMonths, datasets }
     }
 
-    public findAllTransactionRepo = async (page: number, limit: number, search: string | null, eventOrganizerId: string) => {
+    public findAllTransactionRepo = async (page: number, limit: number, search: string | null, status: string | null, eventOrganizerId: string) => {
         const skip = (page - 1) * limit
         const where: Prisma.transactionWhereInput = {
             ...(search && {
@@ -72,74 +72,70 @@ export class TransactionRepository {
                     event_organizer_id: eventOrganizerId,
                 },
             }),
-        } 
-
-        const [data, total] = await Promise.all([
-            prisma.transaction.findMany({
-                where,
-                skip,
-                take: limit,
-                orderBy: {
-                    created_at: 'desc'
-                },
-                select: {
-                    id: true, created_at: true, amount: true, payment_method: true, paid_off_at: true,
-                    event: {
-                        select: {
-                            id: true, event_title: true, 
-                            event_schedule: {
-                                select: {
-                                    end_date: true,
-                                    venue: {
-                                        select: { venue_name: true, venue_coordinate: true }
-                                    }
-                                }   
-                            }
-                        }
-                    }, 
-                    customer: {
-                        select: {
-                            id: true, username: true, profile_pic: true
-                        }
-                    },
-                    used_discounts: {
-                        select: { id: true },
-                    },
-                }
-            }),
-            prisma.transaction.count({ where }),
-        ])
-
-        // Count average transaction amount
-        const allTransactions = await prisma.transaction.findMany({
+        }
+    
+        // Fetch all transactions 
+        const transactions = await prisma.transaction.findMany({
             where,
-            select: { amount: true }
+            orderBy: { created_at: 'desc' },
+            select: {
+                id: true, created_at: true, amount: true, payment_method: true, paid_off_at: true,
+                event: {
+                    select: {
+                        id: true, event_title: true,
+                        event_schedule: {
+                            orderBy: { end_date: 'desc' },
+                            take: 1,
+                            select: {
+                                end_date: true,
+                                venue: {
+                                    select: {
+                                        venue_name: true, venue_coordinate: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                customer: {
+                    select: {
+                        id: true, username: true, profile_pic: true,
+                    },
+                },
+                used_discounts: {
+                    select: { id: true },
+                },
+            },
         })
-        const totalAmount = allTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
-        const averageTransaction = totalAmount / allTransactions.length
-        
-        const modifiedData = data.map(dt => {
+    
+        const now = new Date()
+        // Define status and is_discount
+        const computedTransactions = transactions.map(dt => {
             const eventEndDate = dt.event.event_schedule[0]?.end_date
-            const now = new Date()
-
-            // Define transaction status
-            let status: 'pending' | 'paid' | 'attended' = 'pending'
-
+            let transactionStatus: 'pending' | 'paid' | 'attended' = 'pending'
+    
             if (dt.paid_off_at) {
-                if (eventEndDate && new Date(eventEndDate) > now) {
-                    status = 'attended'
+                if (eventEndDate && new Date(eventEndDate) < now) {
+                    transactionStatus = 'attended'
                 } else {
-                    status = 'paid'
+                    transactionStatus = 'paid'
                 }
             }
-
-            return {
-                ...dt,
-                is_discount: dt.used_discounts && dt.used_discounts.length > 0,
-                status,
-            }
+    
+            return { ...dt, is_discount: dt.used_discounts.length > 0, status: transactionStatus }
         })
-
-        return { data: modifiedData, total, average_transaction: averageTransaction }
-    }
+    
+        // Filter by status
+        const filteredTransactions = status ? computedTransactions.filter(dt => dt.status === status) : computedTransactions
+    
+        // Pagination after filtering
+        const total = filteredTransactions.length
+        const paginatedData = filteredTransactions.slice(skip, skip + limit)
+    
+        // Calculate average transaction amount
+        const totalAmount = filteredTransactions.reduce((sum, dt) => sum + dt.amount, 0)
+        const averageTransaction = total > 0 ? totalAmount / total : 0
+    
+        return { data: paginatedData, total, average_transaction: averageTransaction }
+    }    
 }
