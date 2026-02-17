@@ -1,5 +1,6 @@
 import { prisma } from '../configs/prisma'
 import { format } from "date-fns"
+
 export class TransactionRepository {
     public findEventPeriodicRevenueByOrganizerId = async (eventOrganizerId: string) => {
         // Fetching
@@ -18,21 +19,21 @@ export class TransactionRepository {
         // Group by month/year
         const monthlyData: Record<string, Record<string, number>> = {}
 
-        for (const tx of transactions) {
-            const monthLabel = format(tx.created_at, "MMM yyyy") 
-            const category = tx.event.event_category
+        for (const dt of transactions) {
+            const monthLabel = format(dt.created_at, "MMM yyyy") 
+            const category = dt.event.event_category
 
             if (!monthlyData[monthLabel]) monthlyData[monthLabel] = {}
             if (!monthlyData[monthLabel][category]) monthlyData[monthLabel][category] = 0
 
-            monthlyData[monthLabel][category] += tx.amount
+            monthlyData[monthLabel][category] += dt.amount
         }
 
         // Sort month descending to take last 7
         const sortedMonths = Object.keys(monthlyData).sort((a, b) => new Date(b).getTime() - new Date(a).getTime()).slice(0, 7).reverse()
 
         // Make categories as label
-        const categories = Array.from(new Set(transactions.map(tx => tx.event.event_category)))
+        const categories = Array.from(new Set(transactions.map(dt => dt.event.event_category)))
 
         const datasets = categories.map(category => ({
             label: category,
