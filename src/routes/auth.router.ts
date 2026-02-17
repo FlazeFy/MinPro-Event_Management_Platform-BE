@@ -28,7 +28,5 @@ export default class AuthRouter {
         this.route.put("/profile", verifyAuthToken, authorizeRole(["event_organizer","customer"]), validationCheckForProfileUpdate, putUpdateProfile)
     }
 
-    public getRouter = (): Router => {
-        return this.route
-    }
+    public getRouter = (): Router => this.route
 }

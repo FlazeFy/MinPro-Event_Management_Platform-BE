@@ -22,7 +22,5 @@ export default class DiscountRouter {
         this.route.delete("/:id", verifyAuthToken, authorizeRole(["event_organizer"]), hardDeleteDiscountByIdController)
     }
 
-    public getRouter = (): Router => {
-        return this.route
-    }
+    public getRouter = (): Router => this.route
 }

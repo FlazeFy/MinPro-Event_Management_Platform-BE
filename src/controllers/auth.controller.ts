@@ -153,7 +153,7 @@ export class AuthController {
 
             // Broadcast email
             await sendEmail(
-                email, "Question Sent",
+                email, "Account Registered!",
                 announcementEmailTemplate(
                     email.split("@")[0],
                     `Hi ${username}, Welcome to EventKu! Your registration is complete. We hope you enjoy your experience with us`
@@ -191,7 +191,7 @@ export class AuthController {
 
             // Broadcast email
             await sendEmail(
-                email, "Question Sent",
+                email, "Account Registered!",
                 announcementEmailTemplate(
                     email.split("@")[0],
                     `Hi ${username}, Welcome to EventKu! Your registration is complete. We hope you enjoy your experience with us`
