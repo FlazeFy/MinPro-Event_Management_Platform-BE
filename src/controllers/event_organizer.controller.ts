@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from "express"
 import { EventOrganizerRepository } from "../repositories/event_organizer.repository"
-import { extractUserFromAuthHeader } from "../utils/auth.util"
 
 export class EventOrganizerController {
     private eventOrganizerRepository: EventOrganizerRepository

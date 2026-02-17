@@ -200,4 +200,42 @@ export class EventOrganizerRepository {
             data: { username, email, password, organizer_name, phone_number, bio, address, profile_pic }
         })
     }
+
+    // Stats
+    public findEventOrganizerSummaryById = async (id: string) => {
+        const now = new Date()
+
+        const upcomingEvent = await prisma.event_schedule.findFirst({
+            where: {
+                event: { event_organizer_id: id },
+                start_date: { gte: now },
+            },
+            orderBy: { start_date: "asc" },
+            include: {
+                event: {
+                    select: { event_title: true }
+                },
+            },
+        })
+
+        const totalTransaction = await prisma.transaction.count({
+            where: {
+                event: { event_organizer_id: id },
+            }
+        })
+
+        const totalAttendee = await prisma.attendee.count({
+            where: {
+                transaction: {
+                    event: { event_organizer_id: id }
+                }
+            }
+        })
+      
+        return {
+            upcoming_event: upcomingEvent?.event.event_title ?? null,
+            total_transaction: totalTransaction,
+            total_attendee: totalAttendee,
+        }
+    }
 }
