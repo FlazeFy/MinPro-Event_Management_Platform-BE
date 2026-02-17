@@ -35,9 +35,7 @@ export class VenueRepository {
                     venue_name: 'asc',
                 },
             }),
-            prisma.venue.count({
-                where,
-            }),
+            prisma.venue.count({ where }),
         ])
 
         return { data, total }

@@ -19,7 +19,5 @@ export default class EventRouter {
         this.route.get("/", verifyAuthToken, authorizeRole(["event_organizer", "customer"]), getAllEventController)
     }
 
-    public getRouter = (): Router => {
-        return this.route
-    }
+    public getRouter = (): Router => this.route
 }

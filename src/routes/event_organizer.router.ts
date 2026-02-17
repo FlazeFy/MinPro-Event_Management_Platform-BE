@@ -19,7 +19,5 @@ export default class EventOrganizerRouter {
         this.route.get("/trend", getTrendingEventOrganizer)
     }
 
-    public getRouter = (): Router => {
-        return this.route
-    }
+    public getRouter = (): Router => this.route
 }

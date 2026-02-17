@@ -10,6 +10,8 @@ import { auditError } from "./utils/audit.util"
 import EventRouter from "./routes/event.router"
 import path from "path"
 import multer from "multer"
+import StatsRouter from "./routes/stats.router"
+import TransactionRouter from "./routes/transaction.router"
 
 const PORT = process.env.PORT
 
@@ -40,12 +42,16 @@ class App {
         const venueRouter = new VenueRouter()
         const discountRouter = new DiscountRouter()
         const eventOrganizerRouter = new EventOrganizerRouter()
+        const statsRouter = new StatsRouter()
+        const transactionRouter = new TransactionRouter()
         const event = new EventRouter()
         this.app.use("/api/v1/auths", authRouter.getRouter())
         this.app.use("/api/v1/venues", venueRouter.getRouter())
         this.app.use("/api/v1/discounts", discountRouter.getRouter())
         this.app.use("/api/v1/event_organizers", eventOrganizerRouter.getRouter())
         this.app.use("/api/v1/events", event.getRouter())
+        this.app.use("/api/v1/stats", statsRouter.getRouter())
+        this.app.use("/api/v1/transactions", transactionRouter.getRouter())
     }
 
     // Error handling
