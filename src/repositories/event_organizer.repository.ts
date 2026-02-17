@@ -205,6 +205,7 @@ export class EventOrganizerRepository {
     public findEventOrganizerSummaryById = async (id: string) => {
         const now = new Date()
 
+        // Find the nearest event
         const upcomingEvent = await prisma.event_schedule.findFirst({
             where: {
                 event: { event_organizer_id: id },
@@ -218,12 +219,14 @@ export class EventOrganizerRepository {
             },
         })
 
+        // Count total transaction
         const totalTransaction = await prisma.transaction.count({
             where: {
                 event: { event_organizer_id: id },
             }
         })
 
+        // Count total attendee that registered in each transaction
         const totalAttendee = await prisma.attendee.count({
             where: {
                 transaction: {
@@ -231,11 +234,59 @@ export class EventOrganizerRepository {
                 }
             }
         })
-      
+
+        // Sum of transaction amounts (final after discount)
+        const totalActualRevenueAgg = await prisma.transaction.aggregate({
+            where: {
+                event: { event_organizer_id: id },
+            },
+            _sum: { amount: true },
+        })
+        const totalActualRevenue = totalActualRevenueAgg._sum.amount ?? 0
+        
+        // Reconstruct original revenue before discounts
+        const transactions = await prisma.transaction.findMany({
+            where: {
+                event: { event_organizer_id: id },
+            },
+            include: {
+                used_discounts: {
+                    include: { discount: true }
+                }
+            }
+        })
+        
+        let totalRevenue = 0
+        for (const tx of transactions) {
+            // Start from final amount
+            let discountMultiplier = 1
+            for (const ud of tx.used_discounts) {
+                discountMultiplier *= (1 - ud.discount.percentage / 100)
+            }
+            
+            const originalAmount = tx.amount / discountMultiplier
+            totalRevenue += originalAmount
+        }
+        
+        // Average review rating
+        const averageReviewRateAgg = await prisma.review.aggregate({
+            where: {
+                transaction: {
+                    event: { event_organizer_id: id }
+                }
+            },
+            _avg: { review_rate: true }
+        })
+        const averageReviewRate = averageReviewRateAgg._avg.review_rate ?? 0
+        
         return {
             upcoming_event: upcomingEvent?.event.event_title ?? null,
             total_transaction: totalTransaction,
             total_attendee: totalAttendee,
+            total_revenue: Number(totalRevenue.toFixed(2)),
+            total_actual_revenue: Number(totalActualRevenue.toFixed(2)),
+            average_review_rate: averageReviewRate,
         }
     }
 }
+  
