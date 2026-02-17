@@ -1,4 +1,5 @@
 import { prisma } from '../configs/prisma'
+import { Prisma } from '../generated/prisma/client'
 import { format } from "date-fns"
 
 export class TransactionRepository {
@@ -41,5 +42,70 @@ export class TransactionRepository {
         }))
 
         return { labels: sortedMonths, datasets }
+    }
+
+    public findAllTransactionRepo = async (page: number, limit: number, search: string | null, eventOrganizerId: string) => {
+        const skip = (page - 1) * limit
+        const where: Prisma.transactionWhereInput = {
+            ...(search && {
+                OR: [
+                    {
+                        event: {
+                            event_title: { contains: search, mode: 'insensitive' },
+                        },
+                    },
+                    {
+                        event: {
+                            event_schedule: {
+                                some: {
+                                    venue: {
+                                        venue_name: { contains: search, mode: 'insensitive' },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                ],
+            }),
+            ...(eventOrganizerId && {
+                event: {
+                    event_organizer_id: eventOrganizerId,
+                },
+            }),
+        } 
+
+        const [data, total] = await Promise.all([
+            prisma.transaction.findMany({
+                where,
+                skip,
+                take: limit,
+                orderBy: {
+                    created_at: 'desc'
+                },
+                select: {
+                    id: true, created_at: true, amount: true, payment_method: true, paid_off_at: true,
+                    event: {
+                        select: {
+                            id: true, event_title: true, 
+                            event_schedule: {
+                                select: {
+                                    venue: {
+                                        select: { venue_name: true, venue_coordinate: true }
+                                    }
+                                }   
+                            }
+                        }
+                    }, 
+                    customer: {
+                        select: {
+                            id: true, username: true, profile_pic: true
+                        }
+                    }
+                }
+            }),
+            prisma.transaction.count({ where }),
+        ])
+
+        return { data, total }
     }
 }
