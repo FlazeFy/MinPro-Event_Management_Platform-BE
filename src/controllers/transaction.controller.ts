@@ -30,6 +30,7 @@ export class TransactionController {
                 meta: {
                     page, limit, total: result.total, total_page: Math.ceil(result.total / limit),
                 },
+                average_transaction: result.average_transaction
             })
         } catch (error: any) {
             next(error)

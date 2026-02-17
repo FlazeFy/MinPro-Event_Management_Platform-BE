@@ -89,6 +89,7 @@ export class TransactionRepository {
                             id: true, event_title: true, 
                             event_schedule: {
                                 select: {
+                                    end_date: true,
                                     venue: {
                                         select: { venue_name: true, venue_coordinate: true }
                                     }
@@ -100,12 +101,45 @@ export class TransactionRepository {
                         select: {
                             id: true, username: true, profile_pic: true
                         }
-                    }
+                    },
+                    used_discounts: {
+                        select: { id: true },
+                    },
                 }
             }),
             prisma.transaction.count({ where }),
         ])
 
-        return { data, total }
+        // Count average transaction amount
+        const allTransactions = await prisma.transaction.findMany({
+            where,
+            select: { amount: true }
+        })
+        const totalAmount = allTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
+        const averageTransaction = totalAmount / allTransactions.length
+        
+        const modifiedData = data.map(dt => {
+            const eventEndDate = dt.event.event_schedule[0]?.end_date
+            const now = new Date()
+
+            // Define transaction status
+            let status: 'pending' | 'paid' | 'attended' = 'pending'
+
+            if (dt.paid_off_at) {
+                if (eventEndDate && new Date(eventEndDate) > now) {
+                    status = 'attended'
+                } else {
+                    status = 'paid'
+                }
+            }
+
+            return {
+                ...dt,
+                is_discount: dt.used_discounts && dt.used_discounts.length > 0,
+                status,
+            }
+        })
+
+        return { data: modifiedData, total, average_transaction: averageTransaction }
     }
 }
