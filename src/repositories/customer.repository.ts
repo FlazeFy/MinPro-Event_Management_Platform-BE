@@ -1,8 +1,9 @@
 import { prisma } from '../configs/prisma'
+import { generateTier } from '../utils/generator.util'
 
 export class CustomerRepository {
     public findCustomerByIdRepo = async (id: string) => {
-        return await prisma.customer.findUnique({
+        const res = await prisma.customer.findUnique({
             where: { id },
             select: {
                 username: true, email: true, fullname: true, created_at: true, updated_at: true, phone_number: true, points: true, birth_date: true, referral_code: true,
@@ -15,14 +16,21 @@ export class CustomerRepository {
                 },
             }
         })
+
+        // Count total event's transaction
+        const transaction = await prisma.transaction.count({
+            where: { customer_id: id }
+        })
+        const tier = generateTier('customer', transaction)
+        const finalRes = { ...res, total_transaction: transaction, tier }
+
+        return finalRes
     }
 
     public checkUsernameOrEmailExistRepo = async (username: string, email: string) => {
         return await prisma.customer.findFirst({
             where: {
-                OR: [
-                    { username }, { email },
-                ],
+                OR: [ { username }, { email } ],
             },
             select: {
                 id: true, username: true, email: true,

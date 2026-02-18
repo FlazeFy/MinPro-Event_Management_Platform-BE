@@ -51,10 +51,7 @@ export class AuthRepository {
     public refreshTokenRepo = async (refreshToken: string) => {
         // Verify refresh token
         const decoded = jwt.verify(refreshToken, process.env.SECRET || "secret")
-        if (typeof decoded === "string" || !("id" in decoded)) {
-            return null
-        }
-
+        if (typeof decoded === "string" || !("id" in decoded)) return null
         const id = decoded.id
 
         // Repo : Check event_organizer first
