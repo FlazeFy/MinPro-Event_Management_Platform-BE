@@ -138,4 +138,34 @@ export class TransactionRepository {
     
         return { data: paginatedData, total, average_transaction: averageTransaction }
     }    
+
+    public findCustomerTransactionByEventOrganizerIdRepo = async (page: number, limit: number, search: string | null, customer_id: string) => {
+        const skip = (page - 1) * limit
+        const where: Prisma.transactionWhereInput = {
+            customer_id,
+            ...(search && {
+                event: {
+                    event_title: { contains: search, mode: 'insensitive' },
+                },
+            })
+        }
+
+        const [data, total] = await Promise.all([
+            prisma.transaction.findMany({
+                where,
+                skip,
+                take: limit,
+                orderBy: { created_at: 'desc' },
+                select: {
+                    amount: true, 
+                    event: {
+                        select: { event_title: true, event_category: true }
+                    }
+                }
+            }),
+            prisma.transaction.count({ where }),
+        ])
+
+        return { data, total }
+    }
 }

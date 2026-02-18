@@ -34,3 +34,51 @@ export const validationCheckForProfileUpdate = (req: Request, res: Response, nex
         next()
     })
 }
+
+type ParamRule = {
+    required?: boolean
+    min?: number
+    max?: number
+    alloweds?: string[]
+}
+  
+export type ParamValidatorSchema = Record<string, ParamRule>
+
+export const validateParamMiddleware = (schema: ParamValidatorSchema) => {
+    return (req: Request, res: Response, next: NextFunction) => {
+        const errors: Record<string, string> = {}
+
+        for (const param in schema) {
+            const rules = schema[param]
+            const value = req.params[param]
+
+            if (rules.required && !value) {
+                errors[param] = `${param} is required`
+                continue
+            }
+
+            if (!value) continue
+
+            if (typeof value === "string") {
+                if (rules.min && value.length < rules.min) {
+                    errors[param] = `${param} must be at least ${rules.min} characters`
+                }
+                if (rules.max && value.length > rules.max) {
+                    errors[param] = `${param} must be at most ${rules.max} characters`
+                }
+                if (rules.alloweds && !rules.alloweds.includes(value)) {
+                    errors[param] = `${param} must be one of: ${rules.alloweds.join(", ")}`
+                }
+            }
+        }
+
+        if (Object.keys(errors).length > 0) {
+            return res.status(422).json({
+                message: "Validation error",
+                data: errors
+            })
+        }
+
+        next()
+    }
+}
