@@ -192,8 +192,8 @@ model used_discount {
 }
 
 model feedback {
-  id            String   @id @db.Char(36)
+  id            String   @id @default(uuid()) @db.Char(36)
   feedback_rate Int
   feedback_body String   @db.VarChar(255)
-  created_at    DateTime @db.Timestamp(6)
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
 }
