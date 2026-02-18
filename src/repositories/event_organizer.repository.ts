@@ -31,12 +31,12 @@ export class EventOrganizerRepository {
         if (exists) throw { code: 409, message: "Duplicate field found" }
     }
 
-    public updateEventOrganizerByIdRepo = async (userId: string, username: string, email: string, organizer_name: string, phone_number: string, address?: string) => {
+    public updateEventOrganizerByIdRepo = async (userId: string, username: string, email: string, organizer_name: string, phone_number: string, address?: string, bio?: string) => {
         await this.checkUniqueEventOrganizer(userId, username, email, phone_number, organizer_name)
-        
+
         return prisma.event_organizer.update({
             where: { id: userId },
-            data: { username, email, organizer_name, phone_number, address }
+            data: { username, email, organizer_name, phone_number, address, bio }
         })
     }
 

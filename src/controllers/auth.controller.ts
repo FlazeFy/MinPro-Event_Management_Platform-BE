@@ -80,9 +80,10 @@ export class AuthController {
             if (!result) throw { code: 404, message:  "User not found" }
     
             // Success response
+            const finalRes = { ...result, role }
             res.status(200).json({
                 message: "Get user successful",
-                data: result
+                data: finalRes
             })
         } catch (error: any) {
             next(error)
@@ -102,8 +103,8 @@ export class AuthController {
                     if (!result) throw { code: 404, message:  "User not found" }
 
                     // Repo : Update event organizer by id
-                    const { username, email, organizer_name, phone_number, address } = req.body
-                    newData = await this.eventOrganizerRepository.updateEventOrganizerByIdRepo(userId, username, email, organizer_name, phone_number, address)
+                    const { username, email, organizer_name, phone_number, address, bio } = req.body
+                    newData = await this.eventOrganizerRepository.updateEventOrganizerByIdRepo(userId, username, email, organizer_name, phone_number, address, bio)
 
                     break;
                 } case "customer":

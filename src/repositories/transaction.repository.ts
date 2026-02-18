@@ -44,7 +44,7 @@ export class TransactionRepository {
         return { labels: sortedMonths, datasets }
     }
 
-    public findAllTransactionRepo = async (page: number, limit: number, search: string | null, eventOrganizerId: string) => {
+    public findAllTransactionRepo = async (page: number, limit: number, search: string | null, status: string | null, userId: string, role: string) => {
         const skip = (page - 1) * limit
         const where: Prisma.transactionWhereInput = {
             ...(search && {
@@ -67,39 +67,101 @@ export class TransactionRepository {
                     },
                 ],
             }),
-            ...(eventOrganizerId && {
+            ...(userId && role === "event_organizer" ? {
+                    event: { event_organizer_id: userId }
+                }
+                : userId && role === "customer" ? {
+                    customer_id: userId
+                }
+            : {}),
+        }
+    
+        // Fetch all transactions 
+        const transactions = await prisma.transaction.findMany({
+            where,
+            orderBy: { created_at: 'desc' },
+            select: {
+                id: true, created_at: true, amount: true, payment_method: true, paid_off_at: true,
                 event: {
-                    event_organizer_id: eventOrganizerId,
+                    select: {
+                        id: true, event_title: true,
+                        event_schedule: {
+                            orderBy: { end_date: 'desc' },
+                            take: 1,
+                            select: {
+                                end_date: true,
+                                venue: {
+                                    select: {
+                                        venue_name: true, venue_coordinate: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
                 },
-            }),
-        } 
+                customer: {
+                    select: {
+                        id: true, username: true, profile_pic: true,
+                    },
+                },
+                used_discounts: {
+                    select: { id: true },
+                },
+            },
+        })
+    
+        const now = new Date()
+        // Define status and is_discount
+        const computedTransactions = transactions.map(dt => {
+            const eventEndDate = dt.event.event_schedule[0]?.end_date
+            let transactionStatus: 'pending' | 'paid' | 'attended' = 'pending'
+    
+            if (dt.paid_off_at) {
+                if (eventEndDate && new Date(eventEndDate) < now) {
+                    transactionStatus = 'attended'
+                } else {
+                    transactionStatus = 'paid'
+                }
+            }
+    
+            return { ...dt, is_discount: dt.used_discounts.length > 0, status: transactionStatus }
+        })
+    
+        // Filter by status
+        const filteredTransactions = status ? computedTransactions.filter(dt => dt.status === status) : computedTransactions
+    
+        // Pagination after filtering
+        const total = filteredTransactions.length
+        const paginatedData = filteredTransactions.slice(skip, skip + limit)
+    
+        // Calculate average transaction amount
+        const totalAmount = filteredTransactions.reduce((sum, dt) => sum + dt.amount, 0)
+        const averageTransaction = total > 0 ? totalAmount / total : 0
+    
+        return { data: paginatedData, total, average_transaction: averageTransaction }
+    }    
+
+    public findCustomerTransactionByEventOrganizerRepo = async (page: number, limit: number, search: string | null, customer_id: string) => {
+        const skip = (page - 1) * limit
+        const where: Prisma.transactionWhereInput = {
+            customer_id,
+            ...(search && {
+                event: {
+                    event_title: { contains: search, mode: 'insensitive' },
+                },
+            })
+        }
 
         const [data, total] = await Promise.all([
             prisma.transaction.findMany({
                 where,
                 skip,
                 take: limit,
-                orderBy: {
-                    created_at: 'desc'
-                },
+                orderBy: { created_at: 'desc' },
                 select: {
-                    id: true, created_at: true, amount: true, payment_method: true, paid_off_at: true,
+                    amount: true, created_at: true,
                     event: {
-                        select: {
-                            id: true, event_title: true, 
-                            event_schedule: {
-                                select: {
-                                    venue: {
-                                        select: { venue_name: true, venue_coordinate: true }
-                                    }
-                                }   
-                            }
-                        }
-                    }, 
-                    customer: {
-                        select: {
-                            id: true, username: true, profile_pic: true
-                        }
+                        select: { event_title: true, event_category: true }
                     }
                 }
             }),

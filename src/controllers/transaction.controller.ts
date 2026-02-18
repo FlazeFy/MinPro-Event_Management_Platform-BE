@@ -12,15 +12,16 @@ export class TransactionController {
     public getAllTransactionController = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Get user id
-            const { userId } = extractUserFromAuthHeader(req.headers.authorization)
+            const { userId, role } = extractUserFromAuthHeader(req.headers.authorization)
 
             // Query params
             const page = Number(req.query.page) || 1
             const limit = Number(req.query.limit) || 14
             const search = typeof req.query.search === 'string' ? req.query.search.trim() : null
+            const status = typeof req.query.status === 'string' ? req.query.status.trim() : null
     
             // Repository : Get all transaction
-            const result = await this.transactionRepository.findAllTransactionRepo(page, limit, search, userId)
+            const result = await this.transactionRepository.findAllTransactionRepo(page, limit, search, status === "all" ? null : status, userId, role ?? "")
             if (!result) throw { code: 404, message:  "Transaction not found" }
     
             // Success response
@@ -30,6 +31,7 @@ export class TransactionController {
                 meta: {
                     page, limit, total: result.total, total_page: Math.ceil(result.total / limit),
                 },
+                average_transaction: result.average_transaction
             })
         } catch (error: any) {
             next(error)

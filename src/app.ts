@@ -9,7 +9,6 @@ import EventOrganizerRouter from "./routes/event_organizer.router"
 import { auditError } from "./utils/audit.util"
 import EventRouter from "./routes/event.router"
 import path from "path"
-import multer from "multer"
 import StatsRouter from "./routes/stats.router"
 import TransactionRouter from "./routes/transaction.router"
 
