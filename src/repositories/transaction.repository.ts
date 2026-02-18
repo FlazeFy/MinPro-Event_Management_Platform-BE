@@ -44,7 +44,7 @@ export class TransactionRepository {
         return { labels: sortedMonths, datasets }
     }
 
-    public findAllTransactionRepo = async (page: number, limit: number, search: string | null, status: string | null, eventOrganizerId: string) => {
+    public findAllTransactionRepo = async (page: number, limit: number, search: string | null, status: string | null, userId: string, role: string) => {
         const skip = (page - 1) * limit
         const where: Prisma.transactionWhereInput = {
             ...(search && {
@@ -67,11 +67,13 @@ export class TransactionRepository {
                     },
                 ],
             }),
-            ...(eventOrganizerId && {
-                event: {
-                    event_organizer_id: eventOrganizerId,
-                },
-            }),
+            ...(userId && role === "event_organizer" ? {
+                    event: { event_organizer_id: userId }
+                }
+                : userId && role === "customer" ? {
+                    customer_id: userId
+                }
+            : {}),
         }
     
         // Fetch all transactions 
@@ -139,7 +141,7 @@ export class TransactionRepository {
         return { data: paginatedData, total, average_transaction: averageTransaction }
     }    
 
-    public findCustomerTransactionByEventOrganizerIdRepo = async (page: number, limit: number, search: string | null, customer_id: string) => {
+    public findCustomerTransactionByEventOrganizerRepo = async (page: number, limit: number, search: string | null, customer_id: string) => {
         const skip = (page - 1) * limit
         const where: Prisma.transactionWhereInput = {
             customer_id,
@@ -157,7 +159,7 @@ export class TransactionRepository {
                 take: limit,
                 orderBy: { created_at: 'desc' },
                 select: {
-                    amount: true, 
+                    amount: true, created_at: true,
                     event: {
                         select: { event_title: true, event_category: true }
                     }

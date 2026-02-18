@@ -15,7 +15,7 @@ export default class TransactionRouter {
     private initializeRoute = () => {
         const { getAllTransactionController } = this.transactionController
 
-        this.route.get("/", verifyAuthToken, authorizeRole(["event_organizer"]), getAllTransactionController)
+        this.route.get("/", verifyAuthToken, authorizeRole(["event_organizer","customer"]), getAllTransactionController)
     }
 
     public getRouter = (): Router => this.route
