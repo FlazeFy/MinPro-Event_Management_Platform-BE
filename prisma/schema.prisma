@@ -190,3 +190,10 @@ model used_discount {
   transaction transaction @relation(fields: [transaction_id], references: [id])
   discount discount @relation(fields: [discount_id], references: [id])    
 }
+
+model feedback {
+  id            String   @id @db.Char(36)
+  feedback_rate Int
+  feedback_body String   @db.VarChar(255)
+  created_at    DateTime @db.Timestamp(6)
+}
