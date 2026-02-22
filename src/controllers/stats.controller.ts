@@ -68,4 +68,31 @@ export class StatsController {
             next(error)
         }
     }
+
+    public getCustomerTransactionByEventOrganizerController = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            // Get params
+            const customerId = req.params.customer_id as string
+
+            // Query params
+            const page = Number(req.query.page) || 1
+            const limit = Number(req.query.limit) || 14
+            const search = typeof req.query.search === 'string' ? req.query.search.trim() : null
+    
+            // Repository : Get all transaction
+            const result = await this.transactionRepository.findCustomerTransactionByEventOrganizerRepo(page, limit, search, customerId)
+            if (!result) throw { code: 404, message:  "Transaction not found" }
+    
+            // Success response
+            res.status(200).json({
+                message: "Get transaction successful",
+                data: result.data,
+                meta: {
+                    page, limit, total: result.total, total_page: Math.ceil(result.total / limit),
+                },
+            })
+        } catch (error: any) {
+            next(error)
+        }
+    }
 }

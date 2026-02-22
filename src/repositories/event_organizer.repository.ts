@@ -1,9 +1,10 @@
 import { prisma } from '../configs/prisma'
 import { Prisma } from '../generated/prisma/client'
+import { generateTier } from '../utils/generator.util'
 
 export class EventOrganizerRepository {
     public findEventOrganizerByIdRepo = async (id: string) => {
-        return await prisma.event_organizer.findUnique({
+        const res = await prisma.event_organizer.findUnique({
             where: { id },
             select: {
                 username: true, email: true, organizer_name: true, bio: true, created_at: true, updated_at: true, phone_number: true, address: true,
@@ -14,6 +15,19 @@ export class EventOrganizerRepository {
                 }
             },
         })
+
+        // Count total event's attendee
+        const attendee = await prisma.attendee.count({
+            where: {
+                transaction: {
+                    event: { event_organizer_id: id }
+                }
+            }
+        })
+        const tier = generateTier('event_organizer', attendee)
+        const finalRes = { ...res, total_attendee: attendee, tier }
+
+        return finalRes
     }
 
     private checkUniqueEventOrganizer = async (userId: string, username?: string, email?: string, phone_number?: string, organizer_name?: string) => {
@@ -31,12 +45,12 @@ export class EventOrganizerRepository {
         if (exists) throw { code: 409, message: "Duplicate field found" }
     }
 
-    public updateEventOrganizerByIdRepo = async (userId: string, username: string, email: string, organizer_name: string, phone_number: string, address?: string) => {
+    public updateEventOrganizerByIdRepo = async (userId: string, username: string, email: string, organizer_name: string, phone_number: string, address?: string, bio?: string) => {
         await this.checkUniqueEventOrganizer(userId, username, email, phone_number, organizer_name)
-        
+
         return prisma.event_organizer.update({
             where: { id: userId },
-            data: { username, email, organizer_name, phone_number, address }
+            data: { username, email, organizer_name, phone_number, address, bio }
         })
     }
 
