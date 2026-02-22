@@ -1,5 +1,6 @@
 import { prisma } from '../configs/prisma'
 import { generateTier } from '../utils/generator.util'
+import { createToken } from '../utils/token.util'
 
 export class CustomerRepository {
     public findCustomerByIdRepo = async (id: string) => {
@@ -39,9 +40,18 @@ export class CustomerRepository {
     }
 
     public createCustomerRepo = async (username: string, email: string, password: string, fullname: string, phone_number: string, birth_date: string, profile_pic: string | null) => {
-        return await prisma.customer.create({
+        const customer = await prisma.customer.create({
             data: { username, email, password, fullname, phone_number, birth_date, profile_pic }
         })
+        
+        // Generate auth token
+        const token = createToken({ id: customer.id, role: "customer" }, "7d")
+        return {
+            name: customer.username,
+            email: customer.email,
+            role: "customer",
+            token,
+        }
     }
 
     public checkUniqueCustomer = async (userId: string, username?: string, email?: string, phone_number?: string) => {

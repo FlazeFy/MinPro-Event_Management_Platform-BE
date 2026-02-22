@@ -1,6 +1,7 @@
 import { prisma } from '../configs/prisma'
 import { Prisma } from '../generated/prisma/client'
 import { generateTier } from '../utils/generator.util'
+import { createToken } from '../utils/token.util'
 
 export class EventOrganizerRepository {
     public findEventOrganizerByIdRepo = async (id: string) => {
@@ -210,9 +211,18 @@ export class EventOrganizerRepository {
     }
 
     public createEventOrganizerRepo = async (username: string, email: string, password: string, organizer_name: string, phone_number: string, bio: string, address: string, profile_pic: string | null) => {
-        return await prisma.event_organizer.create({
+        const event_organizer = await prisma.event_organizer.create({
             data: { username, email, password, organizer_name, phone_number, bio, address, profile_pic }
         })
+
+        // Generate auth token
+        const token = createToken({ id: event_organizer.id, role: "event_organizer" }, "7d")
+        return {
+            name: event_organizer.username,
+            email: event_organizer.email,
+            role: "event_organizer",
+            token,
+        }
     }
 
     // Stats
