@@ -1,13 +1,14 @@
 import { prisma } from '../configs/prisma'
 import { Prisma } from '../generated/prisma/client'
 import { generateTier } from '../utils/generator.util'
+import { createToken } from '../utils/token.util'
 
 export class EventOrganizerRepository {
     public findEventOrganizerByIdRepo = async (id: string) => {
         const res = await prisma.event_organizer.findUnique({
             where: { id },
             select: {
-                username: true, email: true, organizer_name: true, bio: true, created_at: true, updated_at: true, phone_number: true, address: true,
+                username: true, email: true, organizer_name: true, bio: true, created_at: true, updated_at: true, phone_number: true, address: true, profile_pic: true,
                 social_medias: {
                     omit: {
                         id: true, event_organizer_id: true
@@ -210,9 +211,18 @@ export class EventOrganizerRepository {
     }
 
     public createEventOrganizerRepo = async (username: string, email: string, password: string, organizer_name: string, phone_number: string, bio: string, address: string, profile_pic: string | null) => {
-        return await prisma.event_organizer.create({
+        const event_organizer = await prisma.event_organizer.create({
             data: { username, email, password, organizer_name, phone_number, bio, address, profile_pic }
         })
+
+        // Generate auth token
+        const token = createToken({ id: event_organizer.id, role: "event_organizer" }, "7d")
+        return {
+            name: event_organizer.username,
+            email: event_organizer.email,
+            role: "event_organizer",
+            token,
+        }
     }
 
     // Stats
@@ -301,6 +311,13 @@ export class EventOrganizerRepository {
             total_actual_revenue: Number(totalActualRevenue.toFixed(2)),
             average_review_rate: averageReviewRate,
         }
+    }
+
+    public updateEventOrganizerProfileImageByIdRepo = async(userId: string, profile_pic: string | null) => {        
+        return prisma.event_organizer.update({
+            where: { id: userId },
+            data: { profile_pic }
+        })
     }
 }
   
