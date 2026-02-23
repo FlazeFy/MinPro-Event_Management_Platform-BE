@@ -18,13 +18,14 @@ export default class AuthRouter {
     }
 
     private initializeRoute = () => {
-        const { postLogin, getRefreshToken, getMyProfile, putUpdateProfile, postRegisterCustomer, postRegisterEventOrganizer } = this.authController
+        const { postLogin, getRefreshToken, getMyProfile, putUpdateProfile, postRegisterCustomer, postRegisterEventOrganizer, postUpdateProfileImage } = this.authController
 
         this.route.post("/login", loginSchemaValidation, validationCheck, postLogin)
         this.route.post("/register/customer", memoryUploader().single("img"), customerRegisterValidation, validationCheck, postRegisterCustomer)
         this.route.post("/register/event_organizer", memoryUploader().single("img"),  eventOrganizerRegisterValidation, validationCheck, postRegisterEventOrganizer)
         this.route.get("/refresh", verifyAuthToken, authorizeRole(["event_organizer","customer"]), getRefreshToken)
         this.route.get("/profile", verifyAuthToken, authorizeRole(["event_organizer","customer"]), getMyProfile)
+        this.route.post("/edit-image", verifyAuthToken, memoryUploader().single("img"), postUpdateProfileImage)
         this.route.put("/profile", verifyAuthToken, authorizeRole(["event_organizer","customer"]), validationCheckForProfileUpdate, putUpdateProfile)
     }
 

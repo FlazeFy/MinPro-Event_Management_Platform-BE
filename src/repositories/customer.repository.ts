@@ -7,7 +7,7 @@ export class CustomerRepository {
         const res = await prisma.customer.findUnique({
             where: { id },
             select: {
-                username: true, email: true, fullname: true, created_at: true, updated_at: true, phone_number: true, points: true, birth_date: true, referral_code: true,
+                username: true, email: true, fullname: true, created_at: true, updated_at: true, phone_number: true, points: true, birth_date: true, referral_code: true, profile_pic: true,
                 owner_referral_code_histories: {
                     select: {
                         customer_user: {
@@ -74,6 +74,13 @@ export class CustomerRepository {
         return prisma.customer.update({
             where: { id: userId },
             data: { username, email, fullname, phone_number, birth_date }
+        })
+    }
+
+    public updateCustomerProfileImageByIdRepo = async(userId: string, profile_pic: string | null) => {        
+        return prisma.customer.update({
+            where: { id: userId },
+            data: { profile_pic }
         })
     }
 }

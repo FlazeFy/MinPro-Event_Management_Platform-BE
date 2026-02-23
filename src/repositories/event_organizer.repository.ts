@@ -8,7 +8,7 @@ export class EventOrganizerRepository {
         const res = await prisma.event_organizer.findUnique({
             where: { id },
             select: {
-                username: true, email: true, organizer_name: true, bio: true, created_at: true, updated_at: true, phone_number: true, address: true,
+                username: true, email: true, organizer_name: true, bio: true, created_at: true, updated_at: true, phone_number: true, address: true, profile_pic: true,
                 social_medias: {
                     omit: {
                         id: true, event_organizer_id: true
@@ -311,6 +311,13 @@ export class EventOrganizerRepository {
             total_actual_revenue: Number(totalActualRevenue.toFixed(2)),
             average_review_rate: averageReviewRate,
         }
+    }
+
+    public updateEventOrganizerProfileImageByIdRepo = async(userId: string, profile_pic: string | null) => {        
+        return prisma.event_organizer.update({
+            where: { id: userId },
+            data: { profile_pic }
+        })
     }
 }
   

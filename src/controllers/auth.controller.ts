@@ -6,6 +6,7 @@ import { announcementEmailTemplate } from "../templates/announcement.template"
 import { extractUserFromAuthHeader, hashPassword } from "../utils/auth.util"
 import { sendEmail } from "../utils/mailer.util"
 import { cloudinaryUpload } from "../configs/cloudinary"
+import { cloudinaryDeleteByUrl } from "../utils/file.util"
 
 export class AuthController {
     private authRepository: AuthRepository
@@ -170,6 +171,44 @@ export class AuthController {
             return res.status(201).json({
                 message: "Register successful",
                 data: result,
+            })
+        } catch (error: any) {
+            next(error)
+        }
+    }
+
+    public postUpdateProfileImage = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            // Get user id
+            const { userId, role } = extractUserFromAuthHeader(req.headers.authorization)
+
+            // Image upload
+            let filePath: string | null = null 
+            if (req.file) { 
+                const result = await cloudinaryUpload(req.file) 
+                filePath = result.secure_url 
+            }
+
+            let result = {}
+            if (role === "customer") {
+                // Repo : Find customer by id
+                const customer = await this.customerRepository.findCustomerByIdRepo(userId)
+                customer.profile_pic && await cloudinaryDeleteByUrl(customer.profile_pic)
+
+                // Repo : Update profile image customer
+                result = await this.customerRepository.updateCustomerProfileImageByIdRepo(userId, filePath)
+            } else {
+                // Repo : Find event organizer by id
+                const event_organizer = await this.eventOrganizerRepository.findEventOrganizerByIdRepo(userId)
+                event_organizer.profile_pic && await cloudinaryDeleteByUrl(event_organizer.profile_pic)
+
+                // Repo : Update profile image event organizer
+                result = await this.eventOrganizerRepository.updateEventOrganizerProfileImageByIdRepo(userId, filePath)
+            }
+            
+            // Success response
+            return res.status(200).json({
+                message: "Profile update successful"
             })
         } catch (error: any) {
             next(error)
