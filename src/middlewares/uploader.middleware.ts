@@ -53,3 +53,15 @@ export const uploader = (filePrefix: string, folderDir: string) => {
         }
     })
 }
+
+export const memoryUploader = () => {
+    return multer({
+        storage: multer.memoryStorage(),
+        limits: { fileSize: 2 * 1024 * 1024 },
+        fileFilter: (req, file, cb) => {
+            const allowedMimeTypes = ["image/jpeg", "image/png", "image/jpg"]
+            if (!allowedMimeTypes.includes(file.mimetype)) return cb(new Error("Only JPG, JPEG, and PNG images are allowed"))
+            cb(null, true)
+        }
+    })
+}

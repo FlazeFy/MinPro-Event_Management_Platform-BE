@@ -5,6 +5,7 @@ import { EventOrganizerRepository } from "../repositories/event_organizer.reposi
 import { announcementEmailTemplate } from "../templates/announcement.template"
 import { extractUserFromAuthHeader, hashPassword } from "../utils/auth.util"
 import { sendEmail } from "../utils/mailer.util"
+import { cloudinaryUpload } from "../configs/cloudinary"
 
 export class AuthController {
     private authRepository: AuthRepository
@@ -146,7 +147,11 @@ export class AuthController {
             if (isExist) throw { code: 409, message: "Username or email already used" }
 
             // Image upload
-            const filePath = req.file ? `/images/${req.file.filename}`: null
+            let filePath: string | null = null 
+            if (req.file) { 
+                const result = await cloudinaryUpload(req.file) 
+                filePath = result.secure_url 
+            }
 
             // Repo : Register
             const hashedPassword = await hashPassword(password)
@@ -184,7 +189,11 @@ export class AuthController {
             if (isExist) throw { code: 409, message: "Username or email already used" }
 
             // Image upload
-            const filePath = req.file ? `/images/${req.file.filename}`: null
+            let filePath: string | null = null 
+            if (req.file) { 
+                const result = await cloudinaryUpload(req.file) 
+                filePath = result.secure_url 
+            }
 
             // Repo : Register
             const hashedPassword = await hashPassword(password)
