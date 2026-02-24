@@ -3,6 +3,7 @@ import { EventOrganizerRepository } from "../repositories/event_organizer.reposi
 import { extractUserFromAuthHeader } from "../utils/auth.util"
 import { TransactionRepository } from "../repositories/transaction.repository"
 import { AttendeeRepository } from "../repositories/attendee.repository"
+import { EventRepository } from "../repositories/event.repository"
 
 export class StatsController {
     private eventOrganizerRepository: EventOrganizerRepository
@@ -15,7 +16,7 @@ export class StatsController {
         this.attendeeRepository = new AttendeeRepository()
     }
 
-    public getEventOrganizerSummary = async (req: Request, res: Response, next: NextFunction) => {
+    public getEventOrganizerSummaryController = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Get user id
             const { userId } = extractUserFromAuthHeader(req.headers.authorization)
@@ -33,7 +34,7 @@ export class StatsController {
         }
     }
 
-    public getPeriodicRevenue = async (req: Request, res: Response, next: NextFunction) => {
+    public getPeriodicRevenueController = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Get user id
             const { userId } = extractUserFromAuthHeader(req.headers.authorization)
@@ -51,7 +52,7 @@ export class StatsController {
         }
     }
 
-    public getPeriodicEventAttendee = async (req: Request, res: Response, next: NextFunction) => {
+    public getPeriodicEventAttendeeController = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Get user id
             const { userId } = extractUserFromAuthHeader(req.headers.authorization)
@@ -62,6 +63,27 @@ export class StatsController {
             // Success response
             res.status(200).json({
                 message: "Get event organizer stats successful",
+                data: result
+            })
+        } catch (error: any) {
+            next(error)
+        }
+    }
+
+    public getTransactionDashboardController = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            // Get params
+            const eventId = req.params.event_id as string
+
+            // Get user id
+            const { userId } = extractUserFromAuthHeader(req.headers.authorization)
+
+            // Repository : Get transaction dashboard
+            const result = await this.transactionRepository.findTransactionDashboardByEventOrganizerIdAndEventId(userId, eventId)
+    
+            // Success response
+            res.status(200).json({
+                message: "Get event stats successful",
                 data: result
             })
         } catch (error: any) {
