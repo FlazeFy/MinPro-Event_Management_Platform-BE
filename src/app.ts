@@ -12,6 +12,8 @@ import path from "path"
 import StatsRouter from "./routes/stats.router"
 import TransactionRouter from "./routes/transaction.router"
 import FeedbackRouter from "./routes/feedback.router"
+import EventSchedule from "./routes/event_schedule.router"
+
 
 const PORT = process.env.PORT
 
@@ -46,11 +48,15 @@ class App {
         const transactionRouter = new TransactionRouter()
         const eventRouter = new EventRouter()
         const feedbackRouter = new FeedbackRouter()
+        const event = new EventRouter()
+        const eventSchedule = new EventSchedule()
         this.app.use("/api/v1/auths", authRouter.getRouter())
         this.app.use("/api/v1/venues", venueRouter.getRouter())
         this.app.use("/api/v1/discounts", discountRouter.getRouter())
         this.app.use("/api/v1/event_organizers", eventOrganizerRouter.getRouter())
         this.app.use("/api/v1/events", eventRouter.getRouter())
+        this.app.use("/api/v1/events", event.getRouter())
+        this.app.use("/api/v1/event_schedules", eventSchedule.getRouter())
         this.app.use("/api/v1/stats", statsRouter.getRouter())
         this.app.use("/api/v1/transactions", transactionRouter.getRouter())
         this.app.use("/api/v1/feedbacks", feedbackRouter.getRouter())
