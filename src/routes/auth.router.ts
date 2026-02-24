@@ -25,7 +25,7 @@ export default class AuthRouter {
         this.route.post("/register/event_organizer", memoryUploader().single("img"),  eventOrganizerRegisterValidation, validationCheck, postRegisterEventOrganizer)
         this.route.get("/refresh", verifyAuthToken, authorizeRole(["event_organizer","customer"]), getRefreshToken)
         this.route.get("/profile", verifyAuthToken, authorizeRole(["event_organizer","customer"]), getMyProfile)
-        this.route.post("/edit-image", verifyAuthToken, memoryUploader().single("img"), postUpdateProfileImage)
+        this.route.post("/edit-image", verifyAuthToken, authorizeRole(["event_organizer","customer"]), memoryUploader().single("img"), postUpdateProfileImage)
         this.route.put("/profile", verifyAuthToken, authorizeRole(["event_organizer","customer"]), validationCheckForProfileUpdate, putUpdateProfile)
     }
 

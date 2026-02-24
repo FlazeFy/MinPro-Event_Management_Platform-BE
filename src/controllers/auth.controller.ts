@@ -189,21 +189,20 @@ export class AuthController {
                 filePath = result.secure_url 
             }
 
-            let result = {}
             if (role === "customer") {
                 // Repo : Find customer by id
                 const customer = await this.customerRepository.findCustomerByIdRepo(userId)
-                customer.profile_pic && await cloudinaryDeleteByUrl(customer.profile_pic)
+                if (customer.profile_pic) await cloudinaryDeleteByUrl(customer.profile_pic)
 
                 // Repo : Update profile image customer
-                result = await this.customerRepository.updateCustomerProfileImageByIdRepo(userId, filePath)
+                await this.customerRepository.updateCustomerProfileImageByIdRepo(userId, filePath)
             } else {
                 // Repo : Find event organizer by id
                 const event_organizer = await this.eventOrganizerRepository.findEventOrganizerByIdRepo(userId)
-                event_organizer.profile_pic && await cloudinaryDeleteByUrl(event_organizer.profile_pic)
+                if (event_organizer.profile_pic) await cloudinaryDeleteByUrl(event_organizer.profile_pic)
 
                 // Repo : Update profile image event organizer
-                result = await this.eventOrganizerRepository.updateEventOrganizerProfileImageByIdRepo(userId, filePath)
+                await this.eventOrganizerRepository.updateEventOrganizerProfileImageByIdRepo(userId, filePath)
             }
             
             // Success response
