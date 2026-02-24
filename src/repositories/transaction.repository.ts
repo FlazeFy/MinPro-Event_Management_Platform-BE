@@ -170,4 +170,66 @@ export class TransactionRepository {
 
         return { data, total }
     }
+
+    public findTransactionDashboardByEventOrganizerIdAndEventId = async (eventOrganizerId: string, eventId: string) => {
+        // ORM Transaction
+        const transactions = await prisma.transaction.findMany({
+            where: {
+                event_id: eventId,
+                event: { event_organizer_id: eventOrganizerId }
+            },
+            include: {
+                attendees: true,
+                used_discounts: true
+            }
+        })
+        
+        const now = new Date()
+        const attendee_gen_comparison: Record<string, number> = {}
+    
+        // Define gen by age
+        transactions.forEach(trx => {
+            trx.attendees.forEach(dt => {
+                const age = now.getFullYear() - new Date(dt.birth_date).getFullYear()
+            
+                let gen = "Unknown"
+                if (age >= 60) gen = "Boomer"
+                else if (age >= 44) gen = "Gen X"
+                else if (age >= 28) gen = "Millennial"
+                else if (age >= 12) gen = "Gen Z"
+                else gen = "Gen Alpha"
+            
+                attendee_gen_comparison[gen] = (attendee_gen_comparison[gen] || 0) + 1
+            })
+        })
+        
+        // Define discount status by relation
+        let with_discount = 0
+        let without_discount = 0
+        transactions.forEach(trx => {
+            if (trx.used_discounts.length > 0) with_discount++
+            else without_discount++
+        })
+        
+        const transaction_discount_comparison = { with_discount, without_discount }
+        
+        const booking_time_comparison = {
+            morning: 0,     // 05 - 11
+            afternoon: 0,   // 12 - 16
+            evening: 0,     // 17 - 20
+            night: 0        // 21 - 04
+        }
+        
+        // Define booking time category by hour
+        transactions.forEach(trx => {
+            const hour = new Date(trx.created_at).getHours()
+        
+            if (hour >= 5 && hour <= 11) booking_time_comparison.morning++
+            else if (hour >= 12 && hour <= 16) booking_time_comparison.afternoon++
+            else if (hour >= 17 && hour <= 20) booking_time_comparison.evening++
+            else booking_time_comparison.night++
+        })
+        
+        return { attendee_gen_comparison, transaction_discount_comparison, booking_time_comparison}
+    }
 }

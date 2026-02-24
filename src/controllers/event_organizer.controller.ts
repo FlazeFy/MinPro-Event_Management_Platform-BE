@@ -62,7 +62,7 @@ export class EventOrganizerController {
         }
     }
 
-    public getTrendingEventOrganizer = async (req: Request, res: Response, next: NextFunction) => {
+    public getTrendingEventOrganizerController = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Repository : Get trending event organizer
             const result = await this.eventOrganizerRepository.findTrendingEventOrganizerRepo()

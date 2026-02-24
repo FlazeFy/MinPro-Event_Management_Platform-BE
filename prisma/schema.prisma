@@ -46,10 +46,11 @@ model customer {
 }
 
 model attendee {
-  id              String  @id @default(uuid()) @db.Char(36)
-  transaction_id  String  @db.Char(36)
-  fullname        String  @db.Char(75)
-  phone_number    String  @db.Char(16)
+  id              String   @id @default(uuid()) @db.Char(36)
+  transaction_id  String   @db.Char(36)
+  fullname        String   @db.Char(75)
+  birth_date      DateTime @db.Date
+  phone_number    String   @db.Char(16)
 
   // FK
   transaction transaction @relation(fields: [transaction_id], references: [id])

@@ -14,9 +14,9 @@ export default class ReferralCodeRouter {
     }
 
     private initializeRoute = () => {
-        const { postUseRefCode } = this.refCodeController
+        const { postUseRefCodeController } = this.refCodeController
 
-        this.route.post("/", refCodeValidation, validationCheck, postUseRefCode)
+        this.route.post("/", refCodeValidation, validationCheck, postUseRefCodeController)
     }
 
     public getRouter = (): Router => this.route

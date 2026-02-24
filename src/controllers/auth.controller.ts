@@ -19,7 +19,7 @@ export class AuthController {
         this.eventOrganizerRepository = new EventOrganizerRepository()
     }
 
-    public postLogin = async (req: Request, res: Response, next: NextFunction) => {
+    public postLoginController = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Body
             const { email, password } = req.body
@@ -38,7 +38,7 @@ export class AuthController {
         }
     }
 
-    public getRefreshToken = async (req: Request, res: Response, next: NextFunction) => {
+    public getRefreshTokenController = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Auth header
             const authHeader = req.headers.authorization
@@ -60,7 +60,7 @@ export class AuthController {
         }
     }
 
-    public getMyProfile = async (req: Request, res: Response, next: NextFunction) => {
+    public getMyProfileController = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Get user id
             const { userId, role } = extractUserFromAuthHeader(req.headers.authorization)
@@ -92,7 +92,7 @@ export class AuthController {
         }
     }
 
-    public putUpdateProfile = async (req: Request, res: Response, next: NextFunction) => {
+    public putUpdateProfileController = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Get user id
             const { userId, role } = extractUserFromAuthHeader(req.headers.authorization)
@@ -135,7 +135,7 @@ export class AuthController {
         }
     }
 
-    public postRegisterCustomer = async (req: Request, res: Response, next: NextFunction) => {
+    public postRegisterCustomerController = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Body
             const { username, email, password, password_confirmation, fullname, phone_number, birth_date } = req.body
@@ -177,7 +177,7 @@ export class AuthController {
         }
     }
 
-    public postUpdateProfileImage = async (req: Request, res: Response, next: NextFunction) => {
+    public postUpdateProfileImageController = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Get user id
             const { userId, role } = extractUserFromAuthHeader(req.headers.authorization)
@@ -214,7 +214,7 @@ export class AuthController {
         }
     }
 
-    public postRegisterEventOrganizer = async (req: Request, res: Response, next: NextFunction) => {
+    public postRegisterEventOrganizerController = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Body
             const { username, email, password, password_confirmation, organizer_name, phone_number, bio, address } = req.body

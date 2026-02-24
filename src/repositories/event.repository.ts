@@ -32,7 +32,6 @@ export class EventRepository {
         return { data, total }
     }
 
-
     public deleteEventByIdRepo = async (userId: string, eventId: string) => {
         try {
             return await prisma.event.delete({

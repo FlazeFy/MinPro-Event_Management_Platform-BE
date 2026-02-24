@@ -15,7 +15,7 @@ export class ReferralCodeController {
         this.customerRepository = new CustomerRepository()
     }
 
-    public postUseRefCode = async (req: Request, res: Response, next: NextFunction) => {
+    public postUseRefCodeController = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Body
             const { referral_code } = req.body

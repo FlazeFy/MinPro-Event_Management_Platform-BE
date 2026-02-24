@@ -18,6 +18,7 @@ class AttendeeSeeder {
                 transaction_id: transaction.id,
                 fullname: faker.person.fullName(),
                 phone_number: faker.string.numeric('62##########'),
+                birth_date: faker.date.birthdate(),
             },
         })
     }
