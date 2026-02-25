@@ -1,9 +1,10 @@
 import { prisma } from '../configs/prisma'
-import { generateTier } from '../utils/generator.util'
+import { generateRefferalCode, generateTier } from '../utils/generator.util'
 import { createToken } from '../utils/token.util'
 
 export class CustomerRepository {
     public findCustomerByIdRepo = async (id: string) => {
+        // ORM
         const res = await prisma.customer.findUnique({
             where: { id },
             select: {
@@ -18,12 +19,18 @@ export class CustomerRepository {
             }
         })
 
+        // Check if customer has been use ref code
+        const refCodeHistory = await prisma.referral_code_history.findFirst({
+            where: { customer_user_id: id }
+        })
+        const is_use_ref_code = refCodeHistory ? true : false
+
         // Count total event's transaction
         const transaction = await prisma.transaction.count({
             where: { customer_id: id }
         })
         const tier = generateTier('customer', transaction)
-        const finalRes = { ...res, total_transaction: transaction, tier }
+        const finalRes = { ...res, total_transaction: transaction, tier, is_use_ref_code }
 
         return finalRes
     }
@@ -40,8 +47,9 @@ export class CustomerRepository {
     }
 
     public createCustomerRepo = async (username: string, email: string, password: string, fullname: string, phone_number: string, birth_date: string, profile_pic: string | null) => {
+        const referral_code: string = generateRefferalCode()
         const customer = await prisma.customer.create({
-            data: { username, email, password, fullname, phone_number, birth_date, profile_pic }
+            data: { username, email, password, fullname, phone_number, birth_date, profile_pic, referral_code }
         })
         
         // Generate auth token

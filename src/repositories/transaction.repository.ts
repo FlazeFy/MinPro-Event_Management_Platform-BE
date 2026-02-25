@@ -170,4 +170,73 @@ export class TransactionRepository {
 
         return { data, total }
     }
+
+    public findTransactionDashboardByEventOrganizerIdAndEventId = async (eventOrganizerId: string, eventId: string) => {
+        // ORM Transaction
+        const transactions = await prisma.transaction.findMany({
+            where: {
+                event_id: eventId,
+                event: { event_organizer_id: eventOrganizerId }
+            },
+            include: {
+                attendees: true,
+                used_discounts: true
+            }
+        })
+        
+        const now = new Date()
+        const genMap: Record<string, number> = {}
+    
+        // Define gen by age
+        transactions.forEach(trx => {
+            trx.attendees.forEach(dt => {
+                const age = now.getFullYear() - new Date(dt.birth_date).getFullYear()
+            
+                let gen = "Unknown"
+                if (age >= 60) gen = "Boomer"
+                else if (age >= 44) gen = "Gen X"
+                else if (age >= 28) gen = "Millennial"
+                else if (age >= 12) gen = "Gen Z"
+                else gen = "Gen Alpha"
+            
+                genMap[gen] = (genMap[gen] || 0) + 1
+            })
+        })
+        
+        const attendee_gen_comparison = Object.entries(genMap).map(([context, total]) => ({ context, total }))
+        
+        // Define discount status by relation
+        let with_discount = 0
+        let without_discount = 0
+        transactions.forEach(trx => {
+            if (trx.used_discounts.length > 0) with_discount++
+            else without_discount++
+        })
+        
+        const transaction_discount_comparison = [
+            { context: "with_discount", total: with_discount },
+            { context: "without_discount", total: without_discount }
+        ]
+        
+        const bookingMap = {
+            morning: 0,
+            afternoon: 0,
+            evening: 0,
+            night: 0
+        }
+        
+        // Define booking time category by hour
+        transactions.forEach(trx => {
+            const hour = new Date(trx.created_at).getHours()
+        
+            if (hour >= 5 && hour <= 11) bookingMap.morning++
+            else if (hour >= 12 && hour <= 16) bookingMap.afternoon++
+            else if (hour >= 17 && hour <= 20) bookingMap.evening++
+            else bookingMap.night++
+        })
+        
+        const booking_time_comparison = Object.entries(bookingMap).map(([context, total]) => ({ context, total }))
+        
+        return { attendee_gen_comparison, transaction_discount_comparison, booking_time_comparison}
+    }
 }

@@ -35,6 +35,25 @@ export class EventController {
         }
     }
 
+    public getUpcomingEventController = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            // Get user id
+            const { userId, role } = extractUserFromAuthHeader(req.headers.authorization)
+
+            // Repository : Get upcoming event
+            const result = await this.eventRepository.findUpcomingEventRepo(userId, role ?? "")
+            if (!result) throw { code: 404, message:  "Event not found" }
+    
+            // Success response
+            res.status(200).json({
+                message: "Get event successful",
+                data: result
+            })
+        } catch (error: any) {
+            next(error)
+        }
+    }
+
     public hardDeleteEventByIdController = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Get params

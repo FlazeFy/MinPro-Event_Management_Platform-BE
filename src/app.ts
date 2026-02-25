@@ -12,6 +12,7 @@ import path from "path"
 import StatsRouter from "./routes/stats.router"
 import TransactionRouter from "./routes/transaction.router"
 import FeedbackRouter from "./routes/feedback.router"
+import ReferralCodeRouter from "./routes/referral_code.router"
 import EventSchedule from "./routes/event_schedule.router"
 
 
@@ -48,6 +49,7 @@ class App {
         const transactionRouter = new TransactionRouter()
         const eventRouter = new EventRouter()
         const feedbackRouter = new FeedbackRouter()
+        const refCodeRouter = new ReferralCodeRouter()
         const event = new EventRouter()
         const eventSchedule = new EventSchedule()
         this.app.use("/api/v1/auths", authRouter.getRouter())
@@ -60,6 +62,7 @@ class App {
         this.app.use("/api/v1/stats", statsRouter.getRouter())
         this.app.use("/api/v1/transactions", transactionRouter.getRouter())
         this.app.use("/api/v1/feedbacks", feedbackRouter.getRouter())
+        this.app.use("/api/v1/referral_code", refCodeRouter.getRouter())
     }
 
     // Error handling

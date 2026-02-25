@@ -33,4 +33,10 @@ export const customerRegisterValidation = [
             "Password must be at least 6 characters and include number"
         ),
 ]
+
+export const refCodeValidation = [
+    body("referral_code").notEmpty().withMessage("Referral code is required")
+        .isLength({ min: 6, max: 6 }).withMessage("Referral code must be exactly 6 characters")
+]
+
   
