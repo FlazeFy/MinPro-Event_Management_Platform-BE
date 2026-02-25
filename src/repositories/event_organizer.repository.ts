@@ -31,6 +31,67 @@ export class EventOrganizerRepository {
         return finalRes
     }
 
+    public findNewComerEventOrganizerRepo = async (page: number, limit: number, search: string | null) => {
+        const skip = (page - 1) * limit
+        const where: Prisma.event_organizerWhereInput = {
+            ...(search && {
+                OR: [
+                    {
+                        organizer_name: {
+                            contains: search,
+                            mode: Prisma.QueryMode.insensitive,
+                        }
+                    },
+                    {
+                        bio: {
+                            contains: search,
+                            mode: Prisma.QueryMode.insensitive,
+                        },
+                    }
+                ]
+            })
+        }
+
+        const [data, total] = await Promise.all([
+            prisma.event_organizer.findMany({
+                where,
+                skip,
+                take: limit,
+                orderBy: { created_at: 'desc' },
+                select: {
+                    id: true, organizer_name: true, bio: true, created_at: true, profile_pic: true, 
+                    _count: { 
+                        select: { events: true }
+                    },
+                    events: {
+                        select: {
+                            transactions: {
+                                select: { attendees: true }
+                            }
+                        }
+                    }
+                }
+            }),
+            prisma.event_organizer.count({ where }),
+        ])
+
+        const finalRes = data.map((dt) => {
+            const totalAttendees = dt.events.reduce((dtSum, idx) => dtSum + idx.transactions.reduce((dtSumPerTs, idxTs) => dtSumPerTs + idxTs.attendees.length, 0), 0)
+            
+            return { 
+                id: dt.id, 
+                organizer_name: dt.organizer_name, 
+                bio: dt.bio, 
+                created_at: dt.created_at, 
+                profile_pic: dt.profile_pic, 
+                total_event: dt._count.events, 
+                total_attendee: totalAttendees,
+            }
+        })
+
+        return { data: finalRes, total }
+    }
+
     private checkUniqueEventOrganizer = async (userId: string, username?: string, email?: string, phone_number?: string, organizer_name?: string) => {
         const exists = await prisma.event_organizer.findFirst({
             where: {
@@ -55,18 +116,24 @@ export class EventOrganizerRepository {
         })
     }
 
-    public findAllEventOrganizerRepo = async (page: number, limit: number, search: string | null, eventOrganizerId: string | null) => {
+    public findAllEventOrganizerRepo = async (page: number, limit: number, search: string | null) => {
         const skip = (page - 1) * limit
         const where: Prisma.event_organizerWhereInput = {
             ...(search && {
-                organizer_name: {
-                    contains: search,
-                    mode: Prisma.QueryMode.insensitive,
-                },
-                bio: {
-                    contains: search,
-                    mode: Prisma.QueryMode.insensitive,
-                },
+                OR: [
+                    {
+                        organizer_name: {
+                            contains: search,
+                            mode: Prisma.QueryMode.insensitive,
+                        }
+                    },
+                    {
+                        bio: {
+                            contains: search,
+                            mode: Prisma.QueryMode.insensitive,
+                        },
+                    }
+                ]
             })
         }
 
