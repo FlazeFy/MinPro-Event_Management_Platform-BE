@@ -185,7 +185,7 @@ export class TransactionRepository {
         })
         
         const now = new Date()
-        const attendee_gen_comparison: Record<string, number> = {}
+        const genMap: Record<string, number> = {}
     
         // Define gen by age
         transactions.forEach(trx => {
@@ -199,9 +199,11 @@ export class TransactionRepository {
                 else if (age >= 12) gen = "Gen Z"
                 else gen = "Gen Alpha"
             
-                attendee_gen_comparison[gen] = (attendee_gen_comparison[gen] || 0) + 1
+                genMap[gen] = (genMap[gen] || 0) + 1
             })
         })
+        
+        const attendee_gen_comparison = Object.entries(genMap).map(([context, total]) => ({ context, total }))
         
         // Define discount status by relation
         let with_discount = 0
@@ -211,24 +213,29 @@ export class TransactionRepository {
             else without_discount++
         })
         
-        const transaction_discount_comparison = { with_discount, without_discount }
+        const transaction_discount_comparison = [
+            { context: "with_discount", total: with_discount },
+            { context: "without_discount", total: without_discount }
+        ]
         
-        const booking_time_comparison = {
-            morning: 0,     // 05 - 11
-            afternoon: 0,   // 12 - 16
-            evening: 0,     // 17 - 20
-            night: 0        // 21 - 04
+        const bookingMap = {
+            morning: 0,
+            afternoon: 0,
+            evening: 0,
+            night: 0
         }
         
         // Define booking time category by hour
         transactions.forEach(trx => {
             const hour = new Date(trx.created_at).getHours()
         
-            if (hour >= 5 && hour <= 11) booking_time_comparison.morning++
-            else if (hour >= 12 && hour <= 16) booking_time_comparison.afternoon++
-            else if (hour >= 17 && hour <= 20) booking_time_comparison.evening++
-            else booking_time_comparison.night++
+            if (hour >= 5 && hour <= 11) bookingMap.morning++
+            else if (hour >= 12 && hour <= 16) bookingMap.afternoon++
+            else if (hour >= 17 && hour <= 20) bookingMap.evening++
+            else bookingMap.night++
         })
+        
+        const booking_time_comparison = Object.entries(bookingMap).map(([context, total]) => ({ context, total }))
         
         return { attendee_gen_comparison, transaction_discount_comparison, booking_time_comparison}
     }
