@@ -54,6 +54,26 @@ export class EventController {
         }
     }
 
+    public getEventByOrganizerIdController = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            // Params & query
+            const eventOrganizerId = req.params.eventOrganizerId as string
+            const limit = Number(req.query.limit) || 6
+
+            // Repository : Get event by organizer id
+            const result = await this.eventRepository.findEventByOrganizerIdRepo(eventOrganizerId, limit)
+            if (!result) throw { code: 404, message: "Event not found" }
+
+            // Success response
+            res.status(200).json({
+                message: "Get event by organizer id successful",
+                data: result,
+            })
+        } catch (error: any) {
+            next(error)
+        }
+    }
+
     public hardDeleteEventByIdController = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Get params

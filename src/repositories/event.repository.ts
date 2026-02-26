@@ -1,5 +1,7 @@
+import { id_ID } from '@faker-js/faker/.'
 import { prisma } from '../configs/prisma'
 import { Prisma } from '../generated/prisma/client'
+import { start } from 'repl'
 
 export class EventRepository {
     public findAllEventRepo = async (page: number, limit: number, search: string | null, eventOrganizerId: string | null) => {
@@ -110,6 +112,58 @@ export class EventRepository {
         }
     }
 
+public findEventByOrganizerIdRepo = async (eventOrganizerId: string, limit: number) => {
+        // Petunjuk: endpoint ini mengambil daftar event berdasarkan `event_organizer_id`.
+        // `limit` bisa diatur dari query params di controller untuk membatasi jumlah data.
+    const events = await prisma.event.findMany({
+        where: {
+            event_organizer_id: eventOrganizerId,  // Filter by organizer
+        },
+        orderBy: {
+            created_at: 'desc',  // newest first
+        },
+        take: limit,
+        select: {
+            id: true,
+            event_title: true,
+            event_desc: true,
+            event_category: true,
+            event_price: true,
+            is_paid: true,
+            maximum_seat: true,
+            created_at: true,
+            event_organizer: {
+                select: {
+                    id: true,
+                    organizer_name: true,
+                },
+            },
+            
+            // GET schedule yang paling awal 
+            event_schedule: {
+                orderBy: { 
+                    start_date: 'asc' 
+                },
+                take: 1,  
+                select: {
+                    id: true,
+                    start_date: true,
+                    end_date: true,
+                    venue: {
+                        select: {
+                            id: true,
+                            venue_name: true,
+                            venue_address: true,
+                        },
+                    },
+                },
+            },
+        },
+    });
+    
+    return events;
+}
+
     public deleteEventByIdRepo = async (userId: string, eventId: string) => {
         try {
             return await prisma.event.delete({
@@ -121,4 +175,3 @@ export class EventRepository {
         }
     } 
 }
-  
