@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express"
-import { extractUserFromAuthHeader } from "../utils/auth.util"
+import { EventCategory } from "../generated/prisma/client"
 import { EventRepository } from "../repositories/event.repository"
+import { extractUserFromAuthHeader } from "../utils/auth.util"
 
 export class EventController {
     private eventRepository: EventRepository
@@ -9,7 +10,6 @@ export class EventController {
         this.eventRepository = new EventRepository()
     }
 
-    
     public getAllEventController = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Query params
@@ -17,11 +17,11 @@ export class EventController {
             const limit = Number(req.query.limit) || 14
             const search = typeof req.query.search === 'string' ? req.query.search.trim() : null
             const eventOrganizerId = typeof req.query.event_organizer_id === 'string' ? req.query.event_organizer_id.trim() : null
-    
+
             // Repository : Get all event
             const result = await this.eventRepository.findAllEventRepo(page, limit, search, eventOrganizerId)
-            if (!result) throw { code: 404, message:  "Event not found" }
-    
+            if (!result) throw { code: 404, message: "Event not found" }
+
             // Success response
             res.status(200).json({
                 message: "Get event successful",
@@ -35,6 +35,36 @@ export class EventController {
         }
     }
 
+    public postCreateEventController = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            // Get user id from auth token
+            const { userId } = extractUserFromAuthHeader(req.headers.authorization)
+
+            // Request body
+            const { event_title, event_desc, event_category, event_price, is_paid, maximum_seat } = req.body
+
+            // Repository : Create event
+            const result = await this.eventRepository.createEventRepo(
+                userId,
+                event_title,
+                event_desc,
+                event_category as EventCategory,
+                Number(event_price) || 0,
+                Boolean(is_paid),
+                Number(maximum_seat) || 0,
+            )
+            if (!result) throw { code: 500, message: "Something went wrong" }
+
+            // Success response
+            res.status(201).json({
+                message: "Event created",
+                data: result,
+            })
+        } catch (error: any) {
+            next(error)
+        }
+    }
+
     public getUpcomingEventController = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Get user id
@@ -42,8 +72,8 @@ export class EventController {
 
             // Repository : Get upcoming event
             const result = await this.eventRepository.findUpcomingEventRepo(userId, role ?? "")
-            if (!result) throw { code: 404, message:  "Event not found" }
-    
+            if (!result) throw { code: 404, message: "Event not found" }
+
             // Success response
             res.status(200).json({
                 message: "Get event successful",
@@ -81,11 +111,11 @@ export class EventController {
 
             // Get user id
             const { userId } = extractUserFromAuthHeader(req.headers.authorization)
-    
+
             // Repository : Hard delete event by id
             const result = await this.eventRepository.deleteEventByIdRepo(userId, eventId)
-            if (!result) throw { code: 404, message:  "Event not found" }
-    
+            if (!result) throw { code: 404, message: "Event not found" }
+
             // Success response
             res.status(200).json({
                 message: "Event deleted"

@@ -1,7 +1,5 @@
-import { id_ID } from '@faker-js/faker/.'
 import { prisma } from '../configs/prisma'
-import { Prisma } from '../generated/prisma/client'
-import { start } from 'repl'
+import { EventCategory, Prisma } from '../generated/prisma/client'
 
 export class EventRepository {
     public findAllEventRepo = async (page: number, limit: number, search: string | null, eventOrganizerId: string | null) => {
@@ -32,6 +30,32 @@ export class EventRepository {
 
         return { data, total }
     }
+
+public createEventRepo = async (
+    eventOrganizerId: string,
+    event_title: string,
+    event_desc: string,
+    event_category: EventCategory,
+    event_price: number,
+    is_paid: boolean,
+    maximum_seat: number,
+) => {
+    // Set price to 0 if it's a free event
+    const price = is_paid ? event_price : 0;    
+    // Create the new event record
+    const newEvent = await prisma.event.create({
+        data: {
+            event_organizer_id: eventOrganizerId,
+            event_title,  // using shorthand property names
+            event_desc,
+            event_category,
+            event_price: price,
+            is_paid,
+            maximum_seat,
+        },
+    });
+    return newEvent;
+}
 
     public findUpcomingEventRepo = async (userId: string, role: string) => {
         if (role === "customer") {
@@ -112,57 +136,55 @@ export class EventRepository {
         }
     }
 
-public findEventByOrganizerIdRepo = async (eventOrganizerId: string, limit: number) => {
+    public findEventByOrganizerIdRepo = async (eventOrganizerId: string, limit: number) => {
         // Petunjuk: endpoint ini mengambil daftar event berdasarkan `event_organizer_id`.
         // `limit` bisa diatur dari query params di controller untuk membatasi jumlah data.
-    const events = await prisma.event.findMany({
-        where: {
-            event_organizer_id: eventOrganizerId,  // Filter by organizer
-        },
-        orderBy: {
-            created_at: 'desc',  // newest first
-        },
-        take: limit,
-        select: {
-            id: true,
-            event_title: true,
-            event_desc: true,
-            event_category: true,
-            event_price: true,
-            is_paid: true,
-            maximum_seat: true,
-            created_at: true,
-            event_organizer: {
-                select: {
-                    id: true,
-                    organizer_name: true,
-                },
+        const events = await prisma.event.findMany({
+            where: {
+                event_organizer_id: eventOrganizerId,
             },
-            
-            // GET schedule yang paling awal 
-            event_schedule: {
-                orderBy: { 
-                    start_date: 'asc' 
+            orderBy: {
+                created_at: 'desc',
+            },
+            take: limit,
+            select: {
+                id: true,
+                event_title: true,
+                event_desc: true,
+                event_category: true,
+                event_price: true,
+                is_paid: true,
+                maximum_seat: true,
+                created_at: true,
+                event_organizer: {
+                    select: {
+                        id: true,
+                        organizer_name: true,
+                    },
                 },
-                take: 1,  
-                select: {
-                    id: true,
-                    start_date: true,
-                    end_date: true,
-                    venue: {
-                        select: {
-                            id: true,
-                            venue_name: true,
-                            venue_address: true,
+                event_schedule: {
+                    orderBy: {
+                        start_date: 'asc'
+                    },
+                    take: 1,
+                    select: {
+                        id: true,
+                        start_date: true,
+                        end_date: true,
+                        venue: {
+                            select: {
+                                id: true,
+                                venue_name: true,
+                                venue_address: true,
+                            },
                         },
                     },
                 },
             },
-        },
-    });
-    
-    return events;
-}
+        })
+
+        return events
+    }
 
     public deleteEventByIdRepo = async (userId: string, eventId: string) => {
         try {
@@ -173,5 +195,5 @@ public findEventByOrganizerIdRepo = async (eventOrganizerId: string, limit: numb
             if (error.code === "P2025") return null
             throw error
         }
-    } 
+    }
 }
