@@ -42,16 +42,7 @@ export class EventController {
 
             // Request body
             const {
-                event_title,
-                event_desc,
-                event_category,
-                event_price,
-                is_paid,
-                maximum_seat,
-                venue_id,
-                start_date,
-                end_date,
-                description,
+                event_title, event_desc, event_category, event_price, is_paid, maximum_seat, venue_id, start_date, end_date, description,
             } = req.body
 
             const startDate = new Date(start_date)
@@ -63,17 +54,8 @@ export class EventController {
 
             // Repository : Create event
             const result = await this.eventRepository.createEventRepo(
-                userId,
-                event_title,
-                event_desc,
-                event_category as EventCategory,
-                Number(event_price) || 0,
-                Boolean(is_paid),
-                Number(maximum_seat) || 0,
-                venue_id,
-                startDate,
-                endDate,
-                description,
+                userId, event_title, event_desc, event_category as EventCategory, Number(event_price) || 0, Boolean(is_paid),
+                Number(maximum_seat) || 0, venue_id, startDate, endDate, description,
             )
             if (!result) throw { code: 500, message: "Something went wrong" }
 
@@ -113,10 +95,11 @@ export class EventController {
 
             // Query params for pagination
             const page = Number(req.query.page) || 1
-            const limit = Number(req.query.limit) || 6
+            const limit = Number(req.query.limit) || 14
+            const search = typeof req.query.search === 'string' ? req.query.search.trim() : null
 
             // Repository : Get recent event by organizer id from auth token
-            const result = await this.eventRepository.findRecentEventByOrganizerRepo(userId, page, limit)
+            const result = await this.eventRepository.findRecentEventByOrganizerRepo(userId, page, limit, search)
             if (!result) throw { code: 404, message: "Event not found" }
 
             // Success response
