@@ -1,2 +1,3 @@
-export const extraPointForOwner: number = 20000
-export const extraPointForUser: number = 10000
+export const extraPointForOwner: number = 10000
+export const extraDiscountForUser: number = 10
+export const pointExpiredDays: number = 90
