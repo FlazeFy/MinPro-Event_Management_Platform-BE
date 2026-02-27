@@ -13,11 +13,19 @@ export default class EventRouter {
     }
 
     private initializeRoute = () => {
-        const { hardDeleteEventByIdController, getAllEventController, getUpcomingEventController } = this.eventController
+        const {
+            hardDeleteEventByIdController,
+            getAllEventController,
+            getUpcomingEventController,
+            getRecentEventByOrganizerController,
+            postCreateEventController,
+        } = this.eventController
 
+        this.route.post("/", verifyAuthToken, authorizeRole(["event_organizer"]), postCreateEventController)
         this.route.delete("/:id", verifyAuthToken, authorizeRole(["event_organizer"]), hardDeleteEventByIdController)
         this.route.get("/", verifyAuthToken, authorizeRole(["event_organizer", "customer"]), getAllEventController)
         this.route.get("/upcoming", verifyAuthToken, authorizeRole(["event_organizer", "customer"]), getUpcomingEventController)
+        this.route.get("/recent", verifyAuthToken, authorizeRole(["event_organizer"]), getRecentEventByOrganizerController)
     }
 
     public getRouter = (): Router => this.route
