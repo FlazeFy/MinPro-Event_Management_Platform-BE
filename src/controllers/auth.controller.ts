@@ -138,7 +138,7 @@ export class AuthController {
     public postRegisterCustomerController = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Body
-            const { username, email, password, password_confirmation, fullname, phone_number, birth_date } = req.body
+            const { username, email, password, password_confirmation, fullname, phone_number, birth_date, referral_code } = req.body
 
             // Validation password confirmation
             if (password !== password_confirmation) throw { code: 401, message: "Password confrimation is not match" }
@@ -156,7 +156,7 @@ export class AuthController {
 
             // Repo : Register
             const hashedPassword = await hashPassword(password)
-            const result = await this.customerRepository.createCustomerRepo(username, email, hashedPassword, fullname, phone_number, birth_date, filePath)
+            const result = await this.customerRepository.createCustomerRepo(username, email, hashedPassword, fullname, phone_number, birth_date, filePath, referral_code)
 
             // Broadcast email
             await sendEmail(

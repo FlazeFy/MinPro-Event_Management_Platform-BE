@@ -19,6 +19,9 @@ export const customerUpdateValidation = [
   
 export const customerRegisterValidation = [
     ...customerUpdateValidation,
+    body("referral_code")
+        .optional()
+        .isLength({ min: 6, max: 6 }).withMessage("Referral code must be exactly 6 characters"),
     body("password")
         .notEmpty().withMessage("Password is required")
         .isLength({ max: 36 }).withMessage("Password must not exceed 36 characters")

@@ -1,5 +1,6 @@
 import { faker } from "@faker-js/faker"
 import { prisma } from "../configs/prisma"
+import { pointExpiredDays } from "../const"
 
 class CustomerPointSeeder {
     private findRandomCustomerWithoutPoint = async () => {
@@ -19,7 +20,7 @@ class CustomerPointSeeder {
     public create = async () => {
         const customer = await this.findRandomCustomerWithoutPoint()
         const createdAt = faker.date.past({ years: 3 }) 
-        const expiredAt = new Date(createdAt.getTime() + 90 * 24 * 60 * 60 * 1000)
+        const expiredAt = new Date(createdAt.getTime() + pointExpiredDays * 24 * 60 * 60 * 1000)
 
         return prisma.customer_point.create({
             data: {
