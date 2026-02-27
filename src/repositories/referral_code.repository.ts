@@ -1,5 +1,5 @@
 import { prisma } from '../configs/prisma'
-import { extraPointForOwner, extraPointForUser } from '../const'
+import { extraDiscountForUser, extraPointForOwner, pointExpiredDays } from '../const'
 
 export class ReferralCodeRepository {
     public createReferralCodeRepo = async (userId: string, refCode: string, myData: any) => {
@@ -14,16 +14,16 @@ export class ReferralCodeRepository {
             data: { customer_owner_id: user?.id, customer_user_id: userId }
         })
 
-        // Update ref code's owner points (achievment)
-        await prisma.customer.update({
-            where: { id: user.id },
-            data: { points: user.points + extraPointForOwner }
+        // Create point for ref's code owner
+        const created_at = new Date()
+        const expired_at = new Date(created_at.getTime() + pointExpiredDays * 24 * 60 * 60 * 1000)
+        await prisma.customer_point.create({
+            data: { point: extraPointForOwner, created_at, expired_at, customer_id: user.id }
         })
 
-        // Update ref code's user points (achievment)
-        await prisma.customer.update({
-            where: { id: userId },
-            data: { points: myData.points + extraPointForUser }
+        // Create discount for ref's code user
+        await prisma.discount.create({
+            data: { customer_id: userId, percentage : extraDiscountForUser, description: 'Extra discount after referral code redeem' }
         })
 
         return user

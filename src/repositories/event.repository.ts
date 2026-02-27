@@ -31,18 +31,8 @@ export class EventRepository {
         return { data, total }
     }
 
-    public createEventRepo = async (
-        eventOrganizerId: string,
-        event_title: string,
-        event_desc: string,
-        event_category: EventCategory,
-        event_price: number,
-        is_paid: boolean,
-        maximum_seat: number,
-        venue_id: string,
-        start_date: Date,
-        end_date: Date,
-        description?: string,
+    public createEventRepo = async (eventOrganizerId: string, event_title: string, event_desc: string, event_category: EventCategory, event_price: number,
+        is_paid: boolean, maximum_seat: number, venue_id: string, start_date: Date, end_date: Date, description?: string,
     ) => {
         // Set price to 0 if it's a free event
         const price = is_paid ? event_price : 0
@@ -156,22 +146,38 @@ export class EventRepository {
         }
     }
 
-    public findRecentEventByOrganizerRepo = async (eventOrganizerId: string, page: number, limit: number) => {
-        // Petunjuk: endpoint ini mengambil event yang sudah selesai milik organizer yang login.
-        // Urutan data berdasarkan jadwal yang paling baru selesai (end_date terbaru).
+    public findRecentEventByOrganizerRepo = async (eventOrganizerId: string, page: number, limit: number, search: string | null) => {
         const skip = (page - 1) * limit
         const now = new Date()
+    
         const whereSchedule: Prisma.event_scheduleWhereInput = {
             end_date: { lt: now },
             event: { event_organizer_id: eventOrganizerId },
+            ...(search && {
+                OR: [
+                    {
+                        event: {
+                            event_title: { contains: search, mode: 'insensitive' },
+                        },
+                    },
+                    {
+                        venue: {
+                            venue_name: { contains: search, mode: 'insensitive' },
+                        },
+                    },
+                ],
+            }),
         }
-
-        const [groupedSchedules, allGroupedSchedules] = await Promise.all([
+    
+        // ORM by event schedule
+        const [groupedSchedules, totalGrouped] = await Promise.all([
             prisma.event_schedule.groupBy({
                 by: ['event_id'],
                 where: whereSchedule,
                 _max: { end_date: true },
-                orderBy: { _max: { end_date: 'desc' } },
+                orderBy: {
+                    _max: { end_date: 'desc' },
+                },
                 skip,
                 take: limit,
             }),
@@ -180,42 +186,59 @@ export class EventRepository {
                 where: whereSchedule,
             }),
         ])
-
+    
         const eventIds = groupedSchedules.map((dt) => dt.event_id)
-        if (eventIds.length === 0) return { data: [], total: allGroupedSchedules.length }
+        if (!eventIds.length) return { data: [], total: totalGrouped.length }
+    
+        // Count total revenue
+        const revenueAgg = await prisma.transaction.groupBy({
+            by: ['event_id'],
+            where: {
+                event_id: { in: eventIds },
+            },
+            _sum: { amount: true },
+        })
+        const revenueMap = new Map(revenueAgg.map((dt) => [dt.event_id, dt._sum.amount ?? 0]))
 
-        const events = await prisma.event.findMany({
-            where: { id: { in: eventIds } },
-            select: {
-                id: true,
-                event_title: true,
-                event_desc: true,
-                event_category: true,
-                event_price: true,
-                is_paid: true,
-                maximum_seat: true,
-                created_at: true,
-                event_organizer: {
-                    select: {
-                        id: true,
-                        organizer_name: true,
-                    },
+        // Count total attendee
+        const attendeeAgg = await prisma.attendee.findMany({
+            where: {
+                transaction: {
+                    event_id: { in: eventIds },
                 },
+            },
+            select: {
+                transaction: {
+                    select: { event_id: true },
+                },
+            },
+        })
+    
+        // Count total booked seat
+        const seatMap = new Map<string, number>()
+        for (const dt of attendeeAgg) {
+            const eventId = dt.transaction.event_id
+            seatMap.set(eventId, (seatMap.get(eventId) ?? 0) + 1)
+        }
+    
+        // ORM Event
+        const events = await prisma.event.findMany({
+            where: {
+                id: { in: eventIds },
+            },
+            select: {
+                id: true, event_title: true, event_desc: true, event_category: true, event_price: true, is_paid: true, maximum_seat: true, created_at: true,
                 event_schedule: {
-                    where: { end_date: { lt: now } },
-                    orderBy: {
-                        end_date: 'desc',
+                    where: {
+                        end_date: { lt: now },
                     },
+                    orderBy: { end_date: 'desc' },
                     take: 1,
                     select: {
-                        id: true,
-                        start_date: true,
-                        end_date: true,
+                        id: true, start_date: true, end_date: true,
                         venue: {
                             select: {
-                                id: true,
-                                venue_name: true,
-                                venue_address: true,
+                                id: true, venue_name: true, venue_address: true,
                             },
                         },
                     },
@@ -223,11 +246,15 @@ export class EventRepository {
             },
         })
 
-        // Jaga urutan sesuai hasil groupedSchedules (paling baru selesai -> paling lama selesai).
         const eventMap = new Map(events.map((dt) => [dt.id, dt]))
-        const orderedData = eventIds.map((id) => eventMap.get(id)).filter(Boolean)
+        const orderedData = eventIds.map((id) => {
+            const event = eventMap.get(id)
+            if (!event) return null
 
-        return { data: orderedData, total: allGroupedSchedules.length }
+            return { ...event, total_revenue: revenueMap.get(id) ?? 0, total_booked_seat: seatMap.get(id) ?? 0 }
+        }).filter(Boolean)
+    
+        return { data: orderedData, total: totalGrouped.length }
     }
 
     public deleteEventByIdRepo = async (userId: string, eventId: string) => {

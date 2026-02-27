@@ -22,7 +22,10 @@ class EventScheduleSeeder {
     public create = async () => {
         const event = await this.findRandomEventNoSchedule()
         const venue = await this.findRandomVenue()
-        const startDate = faker.date.future({ years: 1 })
+        const startDate = faker.date.between({
+            from: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000),
+            to: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        })
         const endDate = new Date(startDate.getTime() + 3 * 60 * 60 * 1000) // 3 hours after start
 
         return prisma.event_schedule.create({

@@ -13,6 +13,7 @@ import AttendeeSeeder from "./seeders/attendee.seeder"
 import ReviewSeeder from "./seeders/review.seeder"
 import UsedDiscountSeeder from "./seeders/used_discount.seeder"
 import FeedbackSeeder from "./seeders/feedback.seeder"
+import CustomerPointSeeder from "./seeders/customer_point.seeder"
 
 class Seeder {
     private customerSeeder = new CustomerSeeder()
@@ -28,6 +29,7 @@ class Seeder {
     private reviewSeeder = new ReviewSeeder()
     private usedDiscountSeeder = new UsedDiscountSeeder()
     private feedbackSeeder = new FeedbackSeeder()
+    private customerPointSeeder = new CustomerPointSeeder()
     private password = "nopass123"
 
     private clearAllTables = async () => {
@@ -41,6 +43,7 @@ class Seeder {
         await prisma.discount.deleteMany()
         await prisma.referral_code_history.deleteMany()
         await prisma.social_media.deleteMany()
+        await prisma.customer_point.deleteMany()
         await prisma.customer.deleteMany()
         await prisma.event_organizer.deleteMany()
         await prisma.venue.deleteMany()
@@ -54,6 +57,7 @@ class Seeder {
             // Run the seeder
             await this.venueSeeder.createMany(50)
             await this.customerSeeder.createMany(100, this.password)
+            await this.customerPointSeeder.createMany(50)
             await this.eventOrganizerSeeder.createMany(25, this.password)
             await this.socialMediaSeeder.createMany(20)
             await this.discountSeeder.createMany(10)
