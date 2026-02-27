@@ -5,3 +5,4 @@
 /src/generated/prisma
 /logs
 /src/public
+src\controllers\dist
