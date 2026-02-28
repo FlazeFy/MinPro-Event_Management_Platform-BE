@@ -106,7 +106,7 @@ export class DiscountController {
             const discountId = req.params.id as string
 
             // Get user id
-            const { userId, role } = extractUserFromAuthHeader(req.headers.authorization)
+            const { userId } = extractUserFromAuthHeader(req.headers.authorization)
     
             // Repository : Hard delete discount by id
             const result = await this.discountRepository.deleteDiscountByIdRepo(userId, discountId)

@@ -257,6 +257,68 @@ export class EventRepository {
         return { data: orderedData, total: totalGrouped.length }
     }
 
+    public findEventAttendeeByEventIdRepo = async (userId: string, eventId: string, page: number, limit: number, search: string | null) => {
+        const skip = (page - 1) * limit 
+        const where: Prisma.attendeeWhereInput = {
+            transaction: {
+                event_id: eventId, 
+            },
+            ...(search && {
+                OR: [
+                    {
+                        fullname: {
+                            contains: search, mode: Prisma.QueryMode.insensitive,
+                        },
+                    },
+                    {
+                        transaction: {
+                            customer: {
+                                username: {
+                                    contains: search, mode: Prisma.QueryMode.insensitive,
+                                },
+                            },
+                        },
+                    },
+                    {
+                        transaction: {
+                            customer: {
+                                fullname: {
+                                    contains: search, mode: Prisma.QueryMode.insensitive,
+                                },
+                            },
+                        },
+                    },
+                ],
+            }),
+        }
+    
+        const [data, total] = await Promise.all([
+            prisma.attendee.findMany({
+                where,
+                skip,
+                take: limit,
+                select: {
+                    fullname: true, phone_number: true, birth_date: true,
+                    transaction: {
+                        select: {
+                            customer: {
+                                select: {
+                                    username: true, email: true, fullname: true,
+                                },
+                            },
+                        },
+                    },
+                },
+                orderBy: {
+                    transaction: { created_at: 'desc' },
+                },
+            }),
+            prisma.attendee.count({ where })
+        ])
+    
+        return { data, total }
+    }
+
     public deleteEventByIdRepo = async (userId: string, eventId: string) => {
         try {
             return await prisma.event.delete({
