@@ -17,7 +17,7 @@ export class VenueController {
     
             // Repository : Get all venue
             const result = await this.venueRepository.findAllVenueRepo(page, limit, search)
-            if (!result) throw { code: 404, message:  "Venue not found" }
+            if (!result || result.data.length === 0) throw { code: 404, message:  "Venue not found" }
     
             // Success response
             res.status(200).json({

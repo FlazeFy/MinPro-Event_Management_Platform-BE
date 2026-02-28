@@ -15,9 +15,10 @@ export default class DiscountRouter {
     }
 
     private initializeRoute = () => {
-        const { getDiscountByEventOrganizerController, postCreateDiscountController, hardDeleteDiscountByIdController } = this.discountController
+        const { getDiscountByEventOrganizerController, postCreateDiscountController, hardDeleteDiscountByIdController, getMyDiscountController } = this.discountController
 
         this.route.get("/:event_organizer_id", verifyAuthToken, authorizeRole(["event_organizer","customer"]), getDiscountByEventOrganizerController)
+        this.route.get("/", verifyAuthToken, authorizeRole(["event_organizer","customer"]), getMyDiscountController)
         this.route.post("/", verifyAuthToken, authorizeRole(["event_organizer"]), discountSchemaValidation, validationCheck, postCreateDiscountController)
         this.route.delete("/:id", verifyAuthToken, authorizeRole(["event_organizer"]), hardDeleteDiscountByIdController)
     }
