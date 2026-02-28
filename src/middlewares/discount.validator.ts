@@ -6,3 +6,8 @@ export const discountSchemaValidation = [
     body("description").notEmpty().withMessage("Description is required")
         .isLength({ max: 144 }).withMessage("Description must not exceed than 144 characters")
 ]
+
+export const discountUpdateSchemaValidation = [
+    body("description").notEmpty().withMessage("Description is required")
+        .isLength({ max: 144 }).withMessage("Description must not exceed than 144 characters")
+]

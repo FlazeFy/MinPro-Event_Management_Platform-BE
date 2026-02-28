@@ -100,7 +100,7 @@ export class EventController {
 
             // Repository : Get recent event by organizer id from auth token
             const result = await this.eventRepository.findRecentEventByOrganizerRepo(userId, page, limit, search)
-            if (!result) throw { code: 404, message: "Event not found" }
+            if (!result || result.data.length === 0) throw { code: 404, message: "Event not found" }
 
             // Success response
             res.status(200).json({

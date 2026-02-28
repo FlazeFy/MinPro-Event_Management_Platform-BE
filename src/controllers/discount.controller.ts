@@ -9,24 +9,45 @@ export class DiscountController {
         this.discountRepository = new DiscountRepository()
     }
 
-    public getAllDiscountController = async (req: Request, res: Response, next: NextFunction) => {
+    public getDiscountByEventOrganizerController = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Query params
+            const eventOrganizerId = req.params.event_organizer_id as string
+    
+            // Repository : Get discount by event organizer id
+            const result = await this.discountRepository.findDiscountByEventOrganizerRepo(eventOrganizerId)
+            if (!result) throw { code: 404, message:  "Discount not found" }
+    
+            // Success response
+            res.status(200).json({
+                message: "Get discount successful",
+                data: result,
+            })
+        } catch (error: any) {
+            next(error)
+        }
+    }
+
+    public getMyDiscountController = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            // Get user id from auth token
+            const { userId, role } = extractUserFromAuthHeader(req.headers.authorization)
+
+            // Query params for pagination
             const page = Number(req.query.page) || 1
             const limit = Number(req.query.limit) || 14
-            const search = typeof req.query.search === 'string' ? req.query.search.trim() : null
-            const eventOrganizerId = typeof req.query.event_organizer_id === 'string' ? req.query.event_organizer_id.trim() : null
     
-            // Repository : Get all discount
-            const result = await this.discountRepository.findAllDiscountRepo(page, limit, search, eventOrganizerId)
-            if (!result) throw { code: 404, message:  "Discount not found" }
+            // Repository : Get my discount
+            const result = await this.discountRepository.findMyDiscountRepo(page, limit, userId, role ?? "")
+            if (!result || result.data.length === 0) throw { code: 404, message:  "Discount not found" }
     
             // Success response
             res.status(200).json({
                 message: "Get discount successful",
                 data: result.data,
                 meta: {
-                    page, limit, total: result.total, total_page: Math.ceil(result.total / limit),
+                    page,
+                    limit,
+                    total: result.total,
                 },
             })
         } catch (error: any) {
@@ -48,8 +69,31 @@ export class DiscountController {
     
             // Success response
             res.status(201).json({
-                message: "Discount created",
-                data: result
+                message: "Discount created"
+            })
+        } catch (error: any) {
+            next(error)
+        }
+    }
+
+    public putUpdateDiscountByIdController = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            // Get params
+            const discountId = req.params.id as string
+
+            // Request body
+            const { description } = req.body
+
+            // Get user id
+            const { userId } = extractUserFromAuthHeader(req.headers.authorization)
+    
+            // Repository : Create discount
+            const result = await this.discountRepository.updateDiscountByIdRepo(discountId, userId, description)
+            if (!result) throw { code: 404, message:  "Discount not found" }
+    
+            // Success response
+            res.status(200).json({
+                message: "Discount updated"
             })
         } catch (error: any) {
             next(error)

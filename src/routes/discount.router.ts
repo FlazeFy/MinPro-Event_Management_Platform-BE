@@ -1,7 +1,7 @@
 import { Router } from "express"
 import { DiscountController } from "../controllers/discount.controller"
 import { authorizeRole, verifyAuthToken } from "../middlewares/auth.middleware"
-import { discountSchemaValidation } from "../middlewares/discount.validator"
+import { discountSchemaValidation, discountUpdateSchemaValidation } from "../middlewares/discount.validator"
 import { validationCheck } from "../middlewares/template.validator"
 
 export default class DiscountRouter {
@@ -15,10 +15,14 @@ export default class DiscountRouter {
     }
 
     private initializeRoute = () => {
-        const { getAllDiscountController, postCreateDiscountController, hardDeleteDiscountByIdController } = this.discountController
+        const { 
+            getDiscountByEventOrganizerController, postCreateDiscountController, hardDeleteDiscountByIdController, getMyDiscountController, putUpdateDiscountByIdController 
+        } = this.discountController
 
-        this.route.get("/", verifyAuthToken, authorizeRole(["event_organizer","customer"]), getAllDiscountController)
+        this.route.get("/:event_organizer_id", verifyAuthToken, authorizeRole(["event_organizer","customer"]), getDiscountByEventOrganizerController)
+        this.route.get("/", verifyAuthToken, authorizeRole(["event_organizer","customer"]), getMyDiscountController)
         this.route.post("/", verifyAuthToken, authorizeRole(["event_organizer"]), discountSchemaValidation, validationCheck, postCreateDiscountController)
+        this.route.put("/:id", verifyAuthToken, authorizeRole(["event_organizer"]), discountUpdateSchemaValidation, validationCheck, putUpdateDiscountByIdController)
         this.route.delete("/:id", verifyAuthToken, authorizeRole(["event_organizer"]), hardDeleteDiscountByIdController)
     }
 

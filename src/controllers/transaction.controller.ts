@@ -22,7 +22,7 @@ export class TransactionController {
     
             // Repository : Get all transaction
             const result = await this.transactionRepository.findAllTransactionRepo(page, limit, search, status === "all" ? null : status, userId, role ?? "")
-            if (!result) throw { code: 404, message:  "Transaction not found" }
+            if (!result || result.data.length === 0) throw { code: 404, message:  "Transaction not found" }
     
             // Success response
             res.status(200).json({

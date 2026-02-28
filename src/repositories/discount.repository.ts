@@ -2,30 +2,41 @@ import { prisma } from '../configs/prisma'
 import { Prisma } from '../generated/prisma/client'
 
 export class DiscountRepository {
-    public findAllDiscountRepo = async (page: number, limit: number, search: string | null, eventOrganizerId: string | null) => {
-        const skip = (page - 1) * limit
-        const where: Prisma.discountWhereInput = {
-            ...(search && {
-                description: {
-                    contains: search,
-                    mode: Prisma.QueryMode.insensitive,
-                },
-            }),
-            ...(eventOrganizerId !== null && {
-                event_organizer_id: eventOrganizerId,
-            }),
+    public findDiscountByEventOrganizerRepo = async (event_organizer_id: string) => {
+        return await prisma.discount.findMany({
+            where : { event_organizer_id },
+            select: {
+                id: true, expired_at: true, description: true, percentage: true                
+            },
+            orderBy: {
+                expired_at: 'desc'
+            },
+        })
+    }
+
+    public findMyDiscountRepo = async (page: number, limit: number, userId: string, role: string) => {
+        const skip = (page - 1) * limit 
+        let where = {}
+
+        if (role === "customer") {
+            where = { customer_id: userId } 
+        } else {
+            where = { event_organizer_id: userId}
         }
 
-        const [data, total] = await Promise.all([
+        const [ data, total ] = await Promise.all([
             prisma.discount.findMany({
                 where,
-                skip,
                 take: limit,
+                skip,
+                select: {
+                    id: true, expired_at: true, description: true, percentage: true, created_at: true                
+                },
                 orderBy: {
-                    percentage: 'desc'
+                    expired_at: 'desc'
                 },
             }),
-            prisma.discount.count({ where }),
+            prisma.discount.count({ where })
         ])
 
         return { data, total }
@@ -34,6 +45,13 @@ export class DiscountRepository {
     public createDiscountRepo = async (event_organizer_id: string, percentage: number, description: string) => {
         return await prisma.discount.create({
             data: { event_organizer_id, percentage, description }
+        })
+    }
+
+    public updateDiscountByIdRepo = async (id: string, event_organizer_id: string, description: string) => {
+        return await prisma.discount.update({
+            data: { description },
+            where: { id, event_organizer_id }
         })
     }
 
