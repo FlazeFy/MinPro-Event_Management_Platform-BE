@@ -2,33 +2,85 @@ import { prisma } from '../configs/prisma'
 import { EventCategory, Prisma } from '../generated/prisma/client'
 
 export class EventRepository {
-    public findAllEventRepo = async (page: number, limit: number, search: string | null, eventOrganizerId: string | null) => {
+    public findAllEventRepo = async (page: number, limit: number, search: string | null) => {
         const skip = (page - 1) * limit
         const where: Prisma.eventWhereInput = {
+            deleted_at: null,
             ...(search && {
                 event_title: {
-                    contains: search,
-                    mode: Prisma.QueryMode.insensitive,
+                    contains: search, mode: Prisma.QueryMode.insensitive,
                 },
             }),
-            ...(eventOrganizerId !== null && {
-                event_organizer_id: eventOrganizerId,
-            }),
         }
-
+    
         const [data, total] = await Promise.all([
             prisma.event.findMany({
                 where,
                 skip,
                 take: limit,
-                orderBy: {
-                    created_at: 'desc'
-                },
+                select: {
+                    id: true, event_title: true, event_category: true, event_desc: true, is_paid: true, maximum_seat: true, event_pic: true, event_price: true,
+                    event_organizer: {
+                        select: { organizer_name: true }
+                    },
+                    event_schedule: {
+                        orderBy: { start_date: 'desc' },
+                        take: 1,
+                        select: {
+                            start_date: true, end_date: true,
+                            venue: {
+                                select: { venue_name: true }
+                            },
+                        },
+                    },
+                }
             }),
-            prisma.event.count({ where }),
+            prisma.event.count({ where })
         ])
-
+    
         return { data, total }
+    }
+
+    public findEventByIdRepo = async (id: string) => {
+        const [event, total_booked] = await Promise.all([
+            prisma.event.findFirst({
+                where: {
+                    id, deleted_at: null
+                },
+                select: {
+                    id: true, event_title: true, event_category: true, event_desc: true, is_paid: true, maximum_seat: true, event_pic: true, event_price: true,
+                    event_organizer: {
+                        select: { id: true, organizer_name: true, email: true, bio: true }
+                    },
+                    event_schedule: {
+                        orderBy: { start_date: 'desc' },
+                        take: 1,
+                        select: {
+                            start_date: true, end_date: true,
+                            venue: { 
+                                select: { venue_name: true } 
+                            },
+                        },
+                    },
+                    transactions: {
+                        select: {
+                            reviews: {
+                                select: { review_body: true, review_rate: true, created_at: true }
+                            }
+                        }
+                    }
+                }
+            }),
+            prisma.attendee.count({
+                where: {
+                    transaction: { event_id: id }
+                }
+            })
+        ])
+    
+        if (!event) return null
+    
+        return { ...event, total_booked, available_seat: event.maximum_seat - total_booked }
     }
 
     public createEventRepo = async (eventOrganizerId: string, event_title: string, event_desc: string, event_category: EventCategory, event_price: number,
@@ -301,6 +353,7 @@ export class EventRepository {
                     fullname: true, phone_number: true, birth_date: true,
                     transaction: {
                         select: {
+                            created_at: true,
                             customer: {
                                 select: {
                                     username: true, email: true, fullname: true,
