@@ -48,6 +48,13 @@ export class DiscountRepository {
         })
     }
 
+    public updateDiscountByIdRepo = async (id: string, event_organizer_id: string, description: string) => {
+        return await prisma.discount.update({
+            data: { description },
+            where: { id, event_organizer_id }
+        })
+    }
+
     public deleteDiscountByIdRepo = async (userId: string, discountId: string) => {
         try {
             return await prisma.discount.delete({

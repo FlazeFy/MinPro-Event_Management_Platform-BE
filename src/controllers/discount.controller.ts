@@ -69,8 +69,31 @@ export class DiscountController {
     
             // Success response
             res.status(201).json({
-                message: "Discount created",
-                data: result
+                message: "Discount created"
+            })
+        } catch (error: any) {
+            next(error)
+        }
+    }
+
+    public putUpdateDiscountByIdController = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            // Get params
+            const discountId = req.params.id as string
+
+            // Request body
+            const { description } = req.body
+
+            // Get user id
+            const { userId } = extractUserFromAuthHeader(req.headers.authorization)
+    
+            // Repository : Create discount
+            const result = await this.discountRepository.updateDiscountByIdRepo(discountId, userId, description)
+            if (!result) throw { code: 404, message:  "Discount not found" }
+    
+            // Success response
+            res.status(200).json({
+                message: "Discount updated"
             })
         } catch (error: any) {
             next(error)
