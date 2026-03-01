@@ -95,7 +95,7 @@ export class EventController {
 
             // Repository : Get upcoming event
             const result = await this.eventRepository.findUpcomingEventRepo(userId, role ?? "")
-            if (!result) throw { code: 404, message: "Event not found" }
+            if (!result || result.length === 0) throw { code: 404, message: "Event not found" }
 
             // Success response
             res.status(200).json({

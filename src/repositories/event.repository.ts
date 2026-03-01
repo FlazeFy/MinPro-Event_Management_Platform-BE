@@ -58,12 +58,15 @@ export class EventRepository {
                         select: {
                             start_date: true, end_date: true,
                             venue: { 
-                                select: { venue_name: true } 
+                                select: { venue_name: true, venue_coordinate: true, venue_address: true } 
                             },
                         },
                     },
                     transactions: {
                         select: {
+                            customer: {
+                                select: { username: true }
+                            },
                             reviews: {
                                 select: { review_body: true, review_rate: true, created_at: true }
                             }
