@@ -239,4 +239,47 @@ export class TransactionRepository {
         
         return { attendee_gen_comparison, transaction_discount_comparison, booking_time_comparison}
     }
+
+    public createTransactionRepo = async (payment_method: string, attendees: any[], discount_id: string | null, event_id: string, userId: string) => {
+        // Validate event
+        const isValidEvent = await prisma.event.findFirst({ where: { id: event_id } })
+        if (!isValidEvent) throw { code: 404, message: "Event not found" }
+
+        // Validate discount
+        let isValidDiscount = null
+        if (discount_id) {
+            isValidDiscount = await prisma.discount.findFirst({
+                where: { id: discount_id, event_organizer_id: isValidEvent.event_organizer_id }
+            })
+            if (!isValidDiscount) throw { code: 404, message: "Discount not found" }
+            // Check if expired
+            if (isValidDiscount.expired_at && new Date() > isValidDiscount.expired_at) throw { code: 400, message: "Discount expired" }
+        }
+
+        // Calculate total price
+        const totalAttendee = attendees.length
+        const basePrice = isValidEvent.event_price * totalAttendee
+
+        let finalPrice = basePrice
+        if (isValidDiscount) finalPrice = basePrice - (basePrice * isValidDiscount.percentage / 100)
+
+        const transaction = await prisma.transaction.create({
+            data: { customer_id: userId, event_id, payment_method, amount: finalPrice, paid_off_at: null },
+        })
+
+        if (discount_id && isValidDiscount) {
+            // Create used discount
+            await prisma.used_discount.create({
+                data: { transaction_id: transaction.id, discount_id }
+            })
+        }
+
+        const attendeeCreated = await prisma.attendee.createMany({
+            data: attendees.map((dt) => ({
+                transaction_id: transaction.id, fullname: dt.fullname, birth_date: new Date(dt.birth_date), phone_number: dt.phone_number
+            }))
+        })
+
+        return { ...transaction, attendee: attendeeCreated, event: isValidEvent }
+    }
 }

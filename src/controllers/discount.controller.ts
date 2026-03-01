@@ -15,7 +15,7 @@ export class DiscountController {
     
             // Repository : Get discount by event organizer id
             const result = await this.discountRepository.findDiscountByEventOrganizerRepo(eventOrganizerId)
-            if (!result) throw { code: 404, message:  "Discount not found" }
+            if (!result || result.length === 0) throw { code: 404, message:  "Discount not found" }
     
             // Success response
             res.status(200).json({
@@ -106,7 +106,7 @@ export class DiscountController {
             const discountId = req.params.id as string
 
             // Get user id
-            const { userId, role } = extractUserFromAuthHeader(req.headers.authorization)
+            const { userId } = extractUserFromAuthHeader(req.headers.authorization)
     
             // Repository : Hard delete discount by id
             const result = await this.discountRepository.deleteDiscountByIdRepo(userId, discountId)

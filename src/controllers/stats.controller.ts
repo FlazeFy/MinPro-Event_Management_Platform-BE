@@ -103,7 +103,7 @@ export class StatsController {
     
             // Repository : Get all transaction
             const result = await this.transactionRepository.findCustomerTransactionByEventOrganizerRepo(page, limit, search, customerId)
-            if (!result) throw { code: 404, message:  "Transaction not found" }
+            if (!result || result.data.length === 0) throw { code: 404, message:  "Transaction not found" }
     
             // Success response
             res.status(200).json({
