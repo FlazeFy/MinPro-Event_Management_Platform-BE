@@ -140,6 +140,36 @@ export class EventController {
         }
     }
 
+    public getMyEventController = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            // Get user id from auth token
+            const { userId } = extractUserFromAuthHeader(req.headers.authorization)
+
+            // Query params for pagination
+            const page = Number(req.query.page) || 1
+            const limit = Number(req.query.limit) || 14
+            const search = typeof req.query.search === 'string' ? req.query.search.trim() : null
+
+            // Repository : Get recent event by organizer id from auth token
+            const result = await this.eventRepository.findEventRepo(userId, page, limit, search)
+            if (!result || result.data.length === 0) throw { code: 404, message: "Event not found" }
+
+            // Success response
+            res.status(200).json({
+                message: "Get recent event successful",
+                data: result.data,
+                meta: {
+                    page,
+                    limit,
+                    total: result.total,
+                    total_page: Math.ceil(result.total / limit),
+                },
+            })
+        } catch (error: any) {
+            next(error)
+        }
+    }
+
     public getEventAttendeeByEventIdController = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Get params

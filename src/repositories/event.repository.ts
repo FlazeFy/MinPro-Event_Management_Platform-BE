@@ -210,6 +210,82 @@ export class EventRepository {
         }
     }
 
+    public findEventRepo = async (eventOrganizerId: string, page: number, limit: number, search: string | null) => {
+        const skip = (page - 1) * limit
+        const keyword = search?.trim()
+
+        const where: Prisma.eventWhereInput = {
+            event_organizer_id: eventOrganizerId,
+            ...(keyword && {
+                OR: [
+                    {
+                        event_title: { contains: keyword, mode: 'insensitive' },
+                    },
+                    {
+                        event_desc: { contains: keyword, mode: 'insensitive' },
+                    },
+                    {
+                        event_schedule: {
+                            some: {
+                                venue: {
+                                    OR: [
+                                        {
+                                            venue_name: { contains: keyword, mode: 'insensitive' },
+                                        },
+                                    ],
+                                },
+                            },
+                        },
+                    },
+                ],
+            }),
+        }
+
+        const [data, total] = await Promise.all([
+            prisma.event.findMany({
+                where,
+                skip,
+                take: limit,
+                orderBy: {
+                    created_at: 'asc',
+                },
+                select: {
+                    id: true, event_title: true, event_category: true, event_desc: true, is_paid: true, maximum_seat: true, event_pic: true, event_price: true,
+                    event_organizer: {
+                        select: { organizer_name: true }
+                    },
+                    event_schedule: {
+                        orderBy: { start_date: 'desc' },
+                        take: 1,
+                        select: {
+                            start_date: true, end_date: true,
+                            venue: {
+                                select: { venue_name: true }
+                            },
+                        },
+                    },
+                    transactions: {
+                        select: {
+                            _count: {
+                                select: { attendees: true }
+                            }
+                        }
+                    }
+                },
+            }),
+            prisma.event.count({ where }),
+        ])
+
+        const formatted = data.map(event => {
+            const totalBooked = event.transactions.reduce((sum, trx) => sum + trx._count.attendees, 0)
+            const { transactions, ...rest } = event
+    
+            return {...rest, total_booked: totalBooked}
+        })
+
+        return { data: formatted, total }
+    }
+
     public findRecentEventByOrganizerRepo = async (eventOrganizerId: string, page: number, limit: number, search: string | null) => {
         const skip = (page - 1) * limit
         const now = new Date()

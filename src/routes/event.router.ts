@@ -20,7 +20,8 @@ export default class EventRouter {
             getRecentEventByOrganizerController,
             postCreateEventController,
             getEventAttendeeByEventIdController,
-            getEventDetailById
+            getEventDetailById,
+            getMyEventController
         } = this.eventController
 
         this.route.post("/", verifyAuthToken, authorizeRole(["event_organizer"]), postCreateEventController)
@@ -30,6 +31,7 @@ export default class EventRouter {
         this.route.get("/attendee/:id", verifyAuthToken, authorizeRole(["event_organizer"]), getEventAttendeeByEventIdController)
         this.route.get("/upcoming", verifyAuthToken, authorizeRole(["event_organizer", "customer"]), getUpcomingEventController)
         this.route.get("/recent", verifyAuthToken, authorizeRole(["event_organizer"]), getRecentEventByOrganizerController)
+        this.route.get("/my", verifyAuthToken, authorizeRole(["event_organizer"]), getMyEventController)
     }
 
     public getRouter = (): Router => this.route
