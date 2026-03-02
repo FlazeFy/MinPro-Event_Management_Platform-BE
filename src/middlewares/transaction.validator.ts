@@ -8,9 +8,15 @@ export const transactionSchemaValidation = [
     body("event_id")
         .notEmpty().withMessage("Event ID is required")
         .isLength({ min: 36, max: 36 }).withMessage("Event ID must be 36 characters"),
-    body("discount_id")
-        .optional({ nullable: true })
+    body("discounts")
+        .optional().isArray().withMessage("Discounts must be an array"),
+    body("discounts.*.id")
+        .notEmpty().withMessage("Discount ID is required")
         .isLength({ min: 36, max: 36 }).withMessage("Discount ID must be 36 characters"),
+    body("discounts.*.type")
+        .notEmpty().withMessage("Discount type is required")
+        .isIn(["discount", "points"])
+        .withMessage("Discount type must be either 'discount' or 'points'"),
     body("attendees")
         .notEmpty().withMessage("Attendee is required")
         .isArray({ min: 1 }).withMessage("Attendee must be an array and contain at least 1 item"),

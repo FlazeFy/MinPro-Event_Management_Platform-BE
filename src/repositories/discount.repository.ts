@@ -1,5 +1,4 @@
 import { prisma } from '../configs/prisma'
-import { Prisma } from '../generated/prisma/client'
 
 export class DiscountRepository {
     public findDiscountByEventOrganizerRepo = async (event_organizer_id: string, customer_id: string, role: string) => {
@@ -8,11 +7,16 @@ export class DiscountRepository {
         if (role === "customer") {
             const discountsPromise = prisma.discount.findMany({
                 where: {
-                    event_organizer_id,
-                    expired_at: {
-                        not: null,
-                        gte: today
-                    }
+                    OR: [
+                        { event_organizer_id },
+                        {
+                            event_organizer_id: null,
+                            customer_id,
+                            expired_at: {
+                                not: null, gte: today
+                            }
+                        }
+                    ]
                 },
                 select: {
                     id: true, expired_at: true, description: true, percentage: true,
@@ -129,8 +133,7 @@ export class DiscountRepository {
         } else {
             // Event organizer discount
             const where = {
-                event_organizer_id: userId,
-                expired_at: { gte: today }
+                event_organizer_id: userId
             }
 
             const [data, total] = await Promise.all([

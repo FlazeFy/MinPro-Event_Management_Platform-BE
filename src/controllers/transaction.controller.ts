@@ -49,10 +49,10 @@ export class TransactionController {
             const { userId } = extractUserFromAuthHeader(req.headers.authorization)
 
             // Request body
-            const { payment_method, attendees, discount_id, event_id } = req.body
+            const { payment_method, attendees, discounts, event_id } = req.body
 
             // Repository : Create event
-            const result = await this.transactionRepository.createTransactionRepo(payment_method, attendees, discount_id, event_id, userId)
+            const result = await this.transactionRepository.createTransactionRepo(payment_method, attendees, discounts, event_id, userId)
             if (!result) throw { code: 500, message: "Something went wrong" }
 
             // Broadcast email
