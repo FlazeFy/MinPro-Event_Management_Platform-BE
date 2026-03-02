@@ -13,9 +13,21 @@ export const eventOrganizerUpdateValidation = [
     body("phone_number")
         .notEmpty().withMessage("Phone number is required")
         .isLength({ max: 16 }).withMessage("Phone number must not exceed 16 characters"),
+    body("bio")
+        .optional()
+        .isLength({ max: 500 }).withMessage("Bio must not exceed 500 characters"),
     body("address")
         .optional()
         .isLength({ max: 255 }).withMessage("Address must not exceed 255 characters"),
+    body("instagram")
+        .optional()
+        .isLength({ max: 500 }).withMessage("Instagram Url must not exceed 500 characters"),
+    body("facebook")
+        .optional()
+        .isLength({ max: 500 }).withMessage("Facebook Url must not exceed 500 characters"),
+    body("tiktok")
+        .optional()
+        .isLength({ max: 500 }).withMessage("Tiktok Url must not exceed 500 characters"),
 ]
 
 export const eventOrganizerRegisterValidation = [

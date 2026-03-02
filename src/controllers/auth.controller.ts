@@ -105,8 +105,8 @@ export class AuthController {
                     if (!result) throw { code: 404, message:  "User not found" }
 
                     // Repo : Update event organizer by id
-                    const { username, email, organizer_name, phone_number, address, bio } = req.body
-                    newData = await this.eventOrganizerRepository.updateEventOrganizerByIdRepo(userId, username, email, organizer_name, phone_number, address, bio)
+                    const { username, email, organizer_name, phone_number, address, bio, instagram, facebook, tiktok } = req.body
+                    newData = await this.eventOrganizerRepository.updateEventOrganizerByIdRepo(userId, username, email, organizer_name, phone_number, address, bio, instagram, facebook, tiktok)
 
                     break;
                 } case "customer":
