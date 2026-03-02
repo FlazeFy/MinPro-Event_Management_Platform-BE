@@ -12,9 +12,12 @@ export class DiscountController {
     public getDiscountByEventOrganizerController = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const eventOrganizerId = req.params.event_organizer_id as string
+
+            // Get user id from auth token
+            const { userId, role } = extractUserFromAuthHeader(req.headers.authorization)
     
             // Repository : Get discount by event organizer id
-            const result = await this.discountRepository.findDiscountByEventOrganizerRepo(eventOrganizerId)
+            const result = await this.discountRepository.findDiscountByEventOrganizerRepo(eventOrganizerId, userId, role ?? "")
             if (!result || result.length === 0) throw { code: 404, message:  "Discount not found" }
     
             // Success response
@@ -61,7 +64,7 @@ export class DiscountController {
             const { percentage, description } = req.body
 
             // Get user id
-            const { userId, role } = extractUserFromAuthHeader(req.headers.authorization)
+            const { userId } = extractUserFromAuthHeader(req.headers.authorization)
     
             // Repository : Create discount
             const result = await this.discountRepository.createDiscountRepo(userId, parseInt(percentage), description)

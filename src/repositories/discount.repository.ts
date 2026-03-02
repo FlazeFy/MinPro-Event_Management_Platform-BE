@@ -1,45 +1,156 @@
 import { prisma } from '../configs/prisma'
-import { Prisma } from '../generated/prisma/client'
 
 export class DiscountRepository {
-    public findDiscountByEventOrganizerRepo = async (event_organizer_id: string) => {
-        return await prisma.discount.findMany({
-            where : { event_organizer_id },
-            select: {
-                id: true, expired_at: true, description: true, percentage: true                
-            },
-            orderBy: {
-                expired_at: 'desc'
-            },
-        })
+    public findDiscountByEventOrganizerRepo = async (event_organizer_id: string, customer_id: string, role: string) => {
+        const today = new Date()
+
+        if (role === "customer") {
+            const discountsPromise = prisma.discount.findMany({
+                where: {
+                    OR: [
+                        { event_organizer_id },
+                        {
+                            event_organizer_id: null,
+                            customer_id,
+                            expired_at: {
+                                not: null, gte: today
+                            }
+                        }
+                    ]
+                },
+                select: {
+                    id: true, expired_at: true, description: true, percentage: true,
+                }
+            })
+
+            const pointsPromise = prisma.customer_point.findMany({
+                where: {
+                    customer_id,
+                    expired_at: { gte: today }
+                },
+                select: {
+                    id: true, expired_at: true, point: true,
+                }
+            })
+
+            const [discounts, points] = await Promise.all([
+                discountsPromise,
+                pointsPromise
+            ])
+
+            const mappedPoints = points.map((item) => ({
+                id: item.id,
+                expired_at: item.expired_at,
+                description: "Redeem token gift",
+                percentage: null,
+                point: item.point,
+            }))
+
+            const combined = [...discounts, ...mappedPoints]
+
+            // Sort by expired_at
+            combined.sort((a, b) => {
+                const dateA = a.expired_at ? new Date(a.expired_at).getTime() : 0
+                const dateB = b.expired_at ? new Date(b.expired_at).getTime() : 0
+                return dateB - dateA
+            })
+
+            return combined
+        } else {
+            return await prisma.discount.findMany({
+                where: {
+                    event_organizer_id,
+                    expired_at: {
+                        not: null,
+                        gte: today
+                    }
+                },
+                select: {
+                    id: true, expired_at: true, description: true, percentage: true
+                },
+                orderBy: { expired_at: "desc" }
+            })
+        }
     }
 
     public findMyDiscountRepo = async (page: number, limit: number, userId: string, role: string) => {
-        const skip = (page - 1) * limit 
-        let where = {}
+        const skip = (page - 1) * limit
+        const today = new Date()
 
         if (role === "customer") {
-            where = { customer_id: userId } 
-        } else {
-            where = { event_organizer_id: userId}
-        }
-
-        const [ data, total ] = await Promise.all([
-            prisma.discount.findMany({
-                where,
-                take: limit,
-                skip,
+            // Get active discounts
+            const discountsPromise = prisma.discount.findMany({
+                where: {
+                    customer_id: userId,
+                    expired_at: { 
+                        gte: today,
+                        not: null, 
+                    }
+                },
                 select: {
-                    id: true, expired_at: true, description: true, percentage: true, created_at: true                
-                },
-                orderBy: {
-                    expired_at: 'desc'
-                },
-            }),
-            prisma.discount.count({ where })
-        ])
+                    id: true, expired_at: true, description: true, percentage: true, created_at: true
+                }
+            })
 
-        return { data, total }
+            // Get active customer points
+            const pointsPromise = prisma.customer_point.findMany({
+                where: {
+                    customer_id: userId,
+                    expired_at: { gte: today }
+                },
+                select: {
+                    id: true, expired_at: true, point: true, created_at: true
+                }
+            })
+
+            const [discounts, points] = await Promise.all([discountsPromise, pointsPromise])
+
+            // Map customer_point to match discount
+            const mappedPoints = points.map((item) => ({
+                id: item.id,
+                expired_at: item.expired_at,
+                description: "Redeem token gift",
+                percentage: null, 
+                created_at: item.created_at,
+                point: item.point
+            }))
+
+            // Combine discount & point
+            const combined = [...discounts, ...mappedPoints]
+
+            // Sort by expired_at
+            combined.sort((a, b) => {
+                const dateA = a.expired_at ? new Date(a.expired_at).getTime() : 0
+                const dateB = b.expired_at ? new Date(b.expired_at).getTime() : 0
+                return dateB - dateA
+            })
+            const total = combined.length
+
+            // Apply pagination
+            const paginated = combined.slice(skip, skip + limit)
+
+            return { data: paginated, total }
+        } else {
+            // Event organizer discount
+            const where = {
+                event_organizer_id: userId
+            }
+
+            const [data, total] = await Promise.all([
+                prisma.discount.findMany({
+                    where,
+                    take: limit,
+                    skip,
+                    select: {
+                        id: true, expired_at: true, description: true, percentage: true, created_at: true
+                    },
+                    orderBy: { expired_at: "desc" }
+                }),
+                prisma.discount.count({ where })
+            ])
+
+            return { data, total }
+        }
     }
 
     public createDiscountRepo = async (event_organizer_id: string, percentage: number, description: string) => {

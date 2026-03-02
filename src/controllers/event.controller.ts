@@ -17,9 +17,11 @@ export class EventController {
             const page = Number(req.query.page) || 1
             const limit = Number(req.query.limit) || 14
             const search = typeof req.query.search === 'string' ? req.query.search.trim() : null
+            const category = typeof req.query.category === 'string' ? req.query.category.trim() : null
+            const maxPrice =  Number(req.query.price) || null
 
             // Repository : Get all event
-            const result = await this.eventRepository.findAllEventRepo(page, limit, search)
+            const result = await this.eventRepository.findAllEventRepo(page, limit, search, category, maxPrice)
             if (!result || result.data.length === 0) throw { code: 404, message: "Event not found" }
 
             // Success response
@@ -29,6 +31,7 @@ export class EventController {
                 meta: {
                     page, limit, total: result.total, total_page: Math.ceil(result.total / limit),
                 },
+                max_price: result.max_price
             })
         } catch (error: any) {
             next(error)

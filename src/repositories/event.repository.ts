@@ -2,7 +2,7 @@ import { prisma } from '../configs/prisma'
 import { EventCategory, Prisma } from '../generated/prisma/client'
 
 export class EventRepository {
-    public findAllEventRepo = async (page: number, limit: number, search: string | null) => {
+    public findAllEventRepo = async (page: number, limit: number, search: string | null, category: string | null, maxPrice: number | null) => {
         const skip = (page - 1) * limit
         const where: Prisma.eventWhereInput = {
             deleted_at: null,
@@ -11,9 +11,17 @@ export class EventRepository {
                     contains: search, mode: Prisma.QueryMode.insensitive,
                 },
             }),
+            ...(category && {
+                event_category: category as any
+            }),
+            ...(maxPrice !== null && {
+                event_price: {
+                    lte: maxPrice
+                }
+            }),
         }
     
-        const [data, total] = await Promise.all([
+        const [data, total, max_price] = await Promise.all([
             prisma.event.findMany({
                 where,
                 skip,
@@ -35,10 +43,11 @@ export class EventRepository {
                     },
                 }
             }),
-            prisma.event.count({ where })
+            prisma.event.count({ where }),
+            prisma.event.aggregate({ _max: { event_price: true } })
         ])
     
-        return { data, total }
+        return { data, total, max_price }
     }
 
     public findEventByIdRepo = async (id: string) => {

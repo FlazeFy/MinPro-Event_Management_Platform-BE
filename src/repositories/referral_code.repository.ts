@@ -23,7 +23,7 @@ export class ReferralCodeRepository {
 
         // Create discount for ref's code user
         await prisma.discount.create({
-            data: { customer_id: userId, percentage : extraDiscountForUser, description: 'Extra discount after referral code redeem' }
+            data: { customer_id: userId, percentage : extraDiscountForUser, description: 'Extra discount after referral code redeem', expired_at }
         })
 
         return user
