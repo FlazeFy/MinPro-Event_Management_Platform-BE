@@ -251,9 +251,6 @@ export class EventRepository {
                 },
                 select: {
                     id: true, event_title: true, event_category: true, event_desc: true, is_paid: true, maximum_seat: true, event_pic: true, event_price: true,
-                    event_organizer: {
-                        select: { organizer_name: true }
-                    },
                     event_schedule: {
                         orderBy: { start_date: 'desc' },
                         take: 1,

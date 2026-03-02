@@ -1,4 +1,5 @@
 import { prisma } from '../configs/prisma'
+import { pointExpiredDays } from '../const'
 import { Prisma } from '../generated/prisma/client'
 import { format } from "date-fns"
 
@@ -67,78 +68,64 @@ export class TransactionRepository {
                     },
                 ],
             }),
-            ...(userId && role === "event_organizer" ? {
-                    event: { event_organizer_id: userId }
-                }
-                : userId && role === "customer" ? {
-                    customer_id: userId
-                }
-            : {}),
+            ...(status && { status: status as any }),
+            ...(
+                userId && role === "event_organizer" ? { event: { event_organizer_id: userId } }
+                    : userId && role === "customer" ? { customer_id: userId }
+                    : {}
+            ),
         }
-    
-        // Fetch all transactions 
-        const transactions = await prisma.transaction.findMany({
-            where,
-            orderBy: { created_at: 'desc' },
-            select: {
-                id: true, created_at: true, amount: true, payment_method: true, paid_off_at: true,
-                event: {
-                    select: {
-                        id: true, event_title: true,
-                        event_schedule: {
-                            orderBy: { end_date: 'desc' },
-                            take: 1,
-                            select: {
-                                end_date: true,
-                                venue: {
-                                    select: {
-                                        venue_name: true, venue_coordinate: true,
+
+        // Fetch all transactions
+        const [transactions, total, aggregate] = await prisma.$transaction([
+            prisma.transaction.findMany({
+                where,
+                skip,
+                take: limit,
+                orderBy: { created_at: 'desc' },
+                select: {
+                    id: true, created_at: true, amount: true, payment_method: true, paid_off_at: true, status: true, transaction_pic: true,
+                    event: {
+                        select: {
+                            id: true, event_title: true,
+                            event_schedule: {
+                                orderBy: { end_date: 'desc' },
+                                take: 1,
+                                select: {
+                                    end_date: true,
+                                    venue: {
+                                        select: {
+                                            venue_name: true, venue_coordinate: true,
+                                        },
                                     },
                                 },
                             },
                         },
                     },
-                },
-                customer: {
-                    select: {
-                        id: true, username: true, profile_pic: true,
+                    customer: {
+                        select: {
+                            id: true, username: true, profile_pic: true,
+                        },
+                    },
+                    used_discounts: {
+                        select: { id: true },
                     },
                 },
-                used_discounts: {
-                    select: { id: true },
-                },
-            },
-        })
-    
-        const now = new Date()
-        // Define status and is_discount
-        const computedTransactions = transactions.map(dt => {
-            const eventEndDate = dt.event.event_schedule[0]?.end_date
-            let transactionStatus: 'pending' | 'paid' | 'attended' = 'pending'
-    
-            if (dt.paid_off_at) {
-                if (eventEndDate && new Date(eventEndDate) < now) {
-                    transactionStatus = 'attended'
-                } else {
-                    transactionStatus = 'paid'
-                }
-            }
-    
-            return { ...dt, is_discount: dt.used_discounts.length > 0, status: transactionStatus }
-        })
-    
-        // Filter by status
-        const filteredTransactions = status ? computedTransactions.filter(dt => dt.status === status) : computedTransactions
-    
-        // Pagination after filtering
-        const total = filteredTransactions.length
-        const paginatedData = filteredTransactions.slice(skip, skip + limit)
-    
-        // Calculate average transaction amount
-        const totalAmount = filteredTransactions.reduce((sum, dt) => sum + dt.amount, 0)
-        const averageTransaction = total > 0 ? totalAmount / total : 0
-    
-        return { data: paginatedData, total, average_transaction: averageTransaction }
+            }),
+            prisma.transaction.count({ where }),
+            prisma.transaction.aggregate({
+                where,
+                _avg: { amount: true },
+            }),
+        ])
+
+        // Define is discount
+        const formattedTransactions = transactions.map(dt => ({
+            ...dt,
+            is_discount: dt.used_discounts.length > 0,
+        }))
+
+        return { data: formattedTransactions, total, average_transaction: aggregate._avg.amount ?? 0 }
     }    
 
     public findCustomerTransactionByEventOrganizerRepo = async (page: number, limit: number, search: string | null, customer_id: string) => {
@@ -291,7 +278,7 @@ export class TransactionRepository {
         if (finalPrice < 0) finalPrice = 0
 
         const transaction = await prisma.transaction.create({
-            data: { customer_id: userId, event_id, payment_method, amount: finalPrice, paid_off_at: null },
+            data: { customer_id: userId, event_id, payment_method, amount: finalPrice, paid_off_at: null, status: "pending" },
         })
 
         if (isValidDiscount) {
