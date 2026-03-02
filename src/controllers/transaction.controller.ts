@@ -4,6 +4,7 @@ import { extractUserFromAuthHeader } from "../utils/auth.util"
 import { sendEmail } from "../utils/mailer.util"
 import { CustomerRepository } from "../repositories/customer.repository"
 import { announcementEmailTemplate } from "../templates/announcement.template"
+import { cloudinaryUpload } from "../configs/cloudinary"
 
 export class TransactionController {
     private transactionRepository: TransactionRepository
@@ -70,6 +71,43 @@ export class TransactionController {
             // Success response
             res.status(201).json({
                 message: "Transaction created",
+            })
+        } catch (error: any) {
+            next(error)
+        }
+    }
+
+    public postUpdateTransactionEvidenceController = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            // Get user id from auth token
+            const { userId } = extractUserFromAuthHeader(req.headers.authorization)
+
+            // Image upload
+            let filePath: string
+            if (req.file) { 
+                const result = await cloudinaryUpload(req.file) 
+                filePath = result.secure_url 
+            } else {
+                throw { code: 404, message: "File not found" }
+            }
+
+            // Request body
+            const { transaction_id } = req.body
+
+            // Repository : Update transaction by id
+            const result = await this.transactionRepository.updateTransactionRepo(transaction_id, userId, filePath)
+            if (!result) throw { code: 404, message: "Transaction not found" }
+            await sendEmail(
+                result.customer.email, "Payment successfull!",
+                announcementEmailTemplate(
+                    result.customer.username,
+                    `Hi ${result.customer.username}, your transaction for the event "${result.event_title}" with a total amount of Rp. ${result.amount.toLocaleString()} is completed. Here is your ticket token: <b>${result.ticket_token}</b>`
+                )
+            )
+
+            // Success response
+            res.status(201).json({
+                message: "Transaction evidence successfully upload",
             })
         } catch (error: any) {
             next(error)

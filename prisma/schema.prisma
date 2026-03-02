@@ -147,6 +147,7 @@ model transaction {
   created_at      DateTime  @default(now()) @db.Timestamptz(6)
   paid_off_at     DateTime? @updatedAt @db.Timestamptz(6) 
   transaction_pic String?   @db.Text
+  ticket_token    String?   @db.Text
   status          TransactionStatus
   
   // FK 

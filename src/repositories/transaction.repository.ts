@@ -1,7 +1,8 @@
 import { prisma } from '../configs/prisma'
-import { pointExpiredDays } from '../const'
 import { Prisma } from '../generated/prisma/client'
 import { format } from "date-fns"
+import { generateRefferalCode } from '../utils/generator.util'
+import { pointExpiredDays } from '../const'
 
 export class TransactionRepository {
     public findEventPeriodicRevenueByOrganizerId = async (eventOrganizerId: string) => {
@@ -84,7 +85,7 @@ export class TransactionRepository {
                 take: limit,
                 orderBy: { created_at: 'desc' },
                 select: {
-                    id: true, created_at: true, amount: true, payment_method: true, paid_off_at: true, status: true, transaction_pic: true,
+                    id: true, created_at: true, amount: true, payment_method: true, paid_off_at: true, status: true, transaction_pic: true, ticket_token: true,
                     event: {
                         select: {
                             id: true, event_title: true,
@@ -232,56 +233,62 @@ export class TransactionRepository {
         const isValidEvent = await prisma.event.findFirst({ where: { id: event_id } })
         if (!isValidEvent) throw { code: 404, message: "Event not found" }
 
+        let finalPrice: number = 0
         // Validate discount
         let isValidDiscount = null
         let isValidPoint = null
-        if (discounts && discounts.length > 0) {
-            for (const item of discounts) {
-                // Validate percentage discount
-                if (item.type === "discount") {
-                    isValidDiscount = await prisma.discount.findFirst({
-                        where: {
-                            id: item.id, event_organizer_id: isValidEvent.event_organizer_id
-                        }
-                    })    
-                    if (!isValidDiscount) throw { code: 404, message: "Discount not found" }
+        if (isValidEvent.is_paid) {
+            if (discounts && discounts.length > 0) {
+                for (const item of discounts) {
+                    // Validate percentage discount
+                    if (item.type === "discount") {
+                        isValidDiscount = await prisma.discount.findFirst({
+                            where: {
+                                id: item.id, event_organizer_id: isValidEvent.event_organizer_id
+                            }
+                        })    
+                        if (!isValidDiscount) throw { code: 404, message: "Discount not found" }
 
-                    // Check if expired
-                    if (isValidDiscount.expired_at && new Date() > isValidDiscount.expired_at) throw { code: 400, message: "Discount expired" }
-                }
-    
-                // Validate customer point
-                if (item.type === "points") {
-                    isValidPoint = await prisma.customer_point.findFirst({
-                        where: {
-                            id: item.id, customer_id: userId, expired_at: { gte: new Date() }
-                        }
-                    })
-    
-                    if (!isValidPoint) throw { code: 404, message: "Customer point not found or expired" }
+                        // Check if expired
+                        if (isValidDiscount.expired_at && new Date() > isValidDiscount.expired_at) throw { code: 400, message: "Discount expired" }
+                    }
+        
+                    // Validate customer point
+                    if (item.type === "points") {
+                        isValidPoint = await prisma.customer_point.findFirst({
+                            where: {
+                                id: item.id, customer_id: userId, expired_at: { gte: new Date() }
+                            }
+                        })
+        
+                        if (!isValidPoint) throw { code: 404, message: "Customer point not found or expired" }
+                    }
                 }
             }
+
+            // Calculate total price
+            const totalAttendee = attendees.length
+            const basePrice = isValidEvent.event_price * totalAttendee
+            finalPrice = basePrice
+
+            if (finalPrice > 0)
+            // Apply percentage discount
+            if (isValidDiscount) finalPrice = finalPrice - (finalPrice * isValidDiscount.percentage / 100)
+
+            // Apply customer points
+            if (isValidPoint) finalPrice = finalPrice - isValidPoint.point
+
+            // Prevent negative amount
+            if (finalPrice < 0) finalPrice = 0
         }
 
-        // Calculate total price
-        const totalAttendee = attendees.length
-        const basePrice = isValidEvent.event_price * totalAttendee
-        let finalPrice = basePrice
-
-        // Apply percentage discount
-        if (isValidDiscount) finalPrice = finalPrice - (finalPrice * isValidDiscount.percentage / 100)
-
-        // Apply customer points
-        if (isValidPoint) finalPrice = finalPrice - isValidPoint.point
-
-        // Prevent negative amount
-        if (finalPrice < 0) finalPrice = 0
-
         const transaction = await prisma.transaction.create({
-            data: { customer_id: userId, event_id, payment_method, amount: finalPrice, paid_off_at: null, status: "pending" },
+            data: { 
+                customer_id: userId, event_id, payment_method, amount: finalPrice, paid_off_at: null, status: !isValidEvent.is_paid ? "paid" : "pending", ticket_token: !isValidEvent.is_paid ? generateRefferalCode() : null 
+            },
         })
 
-        if (isValidDiscount) {
+        if (isValidEvent.is_paid && isValidDiscount) {
             // Create used discount
             await prisma.used_discount.create({
                 data: { transaction_id: transaction.id, discount_id: isValidDiscount.id }
@@ -289,7 +296,7 @@ export class TransactionRepository {
         }
 
         // Delete customer point after used
-        if (isValidPoint) await prisma.customer_point.delete({ where: { id: isValidPoint.id }})
+        if (isValidEvent.is_paid && isValidPoint) await prisma.customer_point.delete({ where: { id: isValidPoint.id }})
 
         const attendeeCreated = await prisma.attendee.createMany({
             data: attendees.map((dt) => ({
@@ -298,5 +305,44 @@ export class TransactionRepository {
         })
 
         return { ...transaction, attendee: attendeeCreated, event: isValidEvent }
+    }
+
+    public updateTransactionRepo = async (id: string, userId: string, filePath: string) => {
+        const ticket_token = generateRefferalCode()
+
+        // Update transaction payment status & evidence
+        const transaction = await prisma.transaction.update({
+            where: { id, customer_id: userId },
+            data: { transaction_pic: filePath, status: "paid", ticket_token }
+        })
+        if (!transaction) throw { code: 404, message: "Transaction not found" }
+
+        // Find event by id
+        const event = await prisma.event.findFirst({
+            where: { id: transaction.event_id },
+        })
+        if (!event) throw { code: 404, message: "Event not found" }
+
+        // Find customer for broadcasting email
+        const customer = await prisma.customer.findFirst({
+            where: { id: transaction.customer_id },
+            select: { username: true, email: true }
+        })
+        if (!customer) throw { code: 404, message: "Customer not found" }
+
+        // Add extra point after each payment validated
+        const finalPrice = transaction.amount
+        if (finalPrice > 1000) {
+            const created_at = new Date()
+            const expired_at = new Date(created_at.getTime() + pointExpiredDays * 24 * 60 * 60 * 1000)
+            
+            await prisma.customer_point.create({
+                data: { point: Math.floor(finalPrice / 1000), created_at, expired_at, customer_id: userId }
+            })
+        }
+
+        return {
+            event_title: event?.event_title, amount: transaction.amount, ticket_token, customer: customer
+        }
     }
 }

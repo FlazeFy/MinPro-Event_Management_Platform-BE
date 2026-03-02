@@ -82,7 +82,7 @@ export class CustomerRepository {
 
                 // Create discount for ref'code user
                 const discount = await prisma.discount.create({
-                    data: { customer_id: customer.id, percentage : extraDiscountForUser, description: 'Extra discount after referral code redeem' }
+                    data: { customer_id: customer.id, percentage : extraDiscountForUser, description: 'Extra discount after referral code redeem', expired_at }
                 })
 
                 if (discount && customer_point) {

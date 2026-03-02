@@ -1,7 +1,7 @@
 import { faker } from "@faker-js/faker"
 import { prisma } from "../configs/prisma"
 import { TransactionStatus } from "../generated/prisma/enums"
-import { randomEnumValue } from "../utils/generator.util"
+import { generateRefferalCode, randomEnumValue } from "../utils/generator.util"
 
 class TransactionSeeder {
     private findRandomCustomer = async() => {
@@ -54,6 +54,7 @@ class TransactionSeeder {
                 amount: faker.number.int({ min: 50_000, max: 2_000_000 }),
                 status,
                 paid_off_at,
+                ticket_token: status !== "pending" ? generateRefferalCode() : null,
                 transaction_pic: status !== "pending" ? faker.internet.url() : null,
                 created_at: faker.date.past({ years: 1 })
             },

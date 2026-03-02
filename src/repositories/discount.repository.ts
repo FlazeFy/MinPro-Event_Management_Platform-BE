@@ -41,7 +41,7 @@ export class DiscountRepository {
             const mappedPoints = points.map((item) => ({
                 id: item.id,
                 expired_at: item.expired_at,
-                description: "Redeem token gift",
+                description: "Your points gift",
                 percentage: null,
                 point: item.point,
             }))
@@ -105,11 +105,11 @@ export class DiscountRepository {
 
             const [discounts, points] = await Promise.all([discountsPromise, pointsPromise])
 
-            // Map customer_point to match discount
+            // Map customer point to match discount
             const mappedPoints = points.map((item) => ({
                 id: item.id,
                 expired_at: item.expired_at,
-                description: "Redeem token gift",
+                description: "Your points gift",
                 percentage: null, 
                 created_at: item.created_at,
                 point: item.point
