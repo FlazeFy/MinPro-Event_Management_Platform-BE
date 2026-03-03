@@ -20,9 +20,7 @@ class TransactionSeeder {
         return prisma.event.findFirst({ skip, select: { id: true }})
     }
 
-    private randomTransactionStatus = (): TransactionStatus => {
-        return randomEnumValue(Object.values(TransactionStatus))
-    }
+    private randomTransactionStatus = (): TransactionStatus => randomEnumValue(Object.values(TransactionStatus))
 
     public create = async () => {
         const customer = await this.findRandomCustomer()
@@ -62,9 +60,7 @@ class TransactionSeeder {
     }
 
     public createMany = async (count: number) => {
-        for (let i = 0; i < count; i++) {
-            await this.create()
-        }
+        for (let i = 0; i < count; i++) await this.create()
     }
 }
 

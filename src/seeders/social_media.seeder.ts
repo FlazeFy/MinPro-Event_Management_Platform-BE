@@ -4,9 +4,7 @@ import { SocialMediaPlatform } from "../generated/prisma/enums"
 import { randomEnumValue } from "../utils/generator.util"
 
 class SocialMediaSeeder {
-    private randomSocialMediaPlatform = (): SocialMediaPlatform => {
-        return randomEnumValue(Object.values(SocialMediaPlatform))
-    }
+    private randomSocialMediaPlatform = (): SocialMediaPlatform => randomEnumValue(Object.values(SocialMediaPlatform))
 
     private findRandomEventOrganiser = async() => {
         const whereClause = { social_medias: { none: {} } }
@@ -35,9 +33,7 @@ class SocialMediaSeeder {
     }
 
     public createMany = async (count: number) => {
-        for (let i = 0; i < count; i++) {
-            await this.create()
-        }
+        for (let i = 0; i < count; i++) await this.create()
     }
 }
 
