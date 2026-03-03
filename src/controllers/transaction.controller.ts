@@ -5,6 +5,7 @@ import { sendEmail } from "../utils/mailer.util"
 import { CustomerRepository } from "../repositories/customer.repository"
 import { announcementEmailTemplate } from "../templates/announcement.template"
 import { cloudinaryUpload } from "../configs/cloudinary"
+import { paginationDefault } from "../const"
 
 export class TransactionController {
     private transactionRepository: TransactionRepository
@@ -22,7 +23,7 @@ export class TransactionController {
 
             // Query params
             const page = Number(req.query.page) || 1
-            const limit = Number(req.query.limit) || 14
+            const limit = Number(req.query.limit) || paginationDefault
             const search = typeof req.query.search === 'string' ? req.query.search.trim() : null
             const status = typeof req.query.status === 'string' ? req.query.status.trim() : null
     

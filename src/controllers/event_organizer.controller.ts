@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express"
 import { EventOrganizerRepository } from "../repositories/event_organizer.repository"
+import { paginationDefault } from "../const"
 
 export class EventOrganizerController {
     private eventOrganizerRepository: EventOrganizerRepository
@@ -12,7 +13,7 @@ export class EventOrganizerController {
         try {
             // Query params
             const page = Number(req.query.page) || 1
-            const limit = Number(req.query.limit) || 14
+            const limit = Number(req.query.limit) || paginationDefault
             const search = typeof req.query.search === 'string' ? req.query.search.trim() : null
     
             // Repository : Get all event organizer
@@ -38,7 +39,7 @@ export class EventOrganizerController {
             const id = req.params.id as string
             // Query
             const page = Number(req.query.page) || 1
-            const limit = Number(req.query.limit) || 14
+            const limit = Number(req.query.limit) || paginationDefault
             const search = typeof req.query.search === 'string' ? req.query.search.trim() : null
             const event_category = typeof req.query.event_category === 'string' ? req.query.event_category.trim() : null
             const price_min = Number(req.query.price_min) || null
@@ -67,7 +68,7 @@ export class EventOrganizerController {
             const id = req.params.id as string
             // Query
             const page = Number(req.query.page) || 1
-            const limit = Number(req.query.limit) || 14
+            const limit = Number(req.query.limit) || paginationDefault
             const search = typeof req.query.search === 'string' ? req.query.search.trim() : null
     
             // Repository : Get event organizer detail

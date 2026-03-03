@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express"
 import { EventScheduleRepository } from "../repositories/event_schedule.repository"
+import { paginationDefault } from "../const"
 
 export class EventScheduleController {
     private eventScheduleRepository: EventScheduleRepository
@@ -12,7 +13,7 @@ export class EventScheduleController {
         try {
             // Query params
             const page = Number(req.query.page) || 1
-            const limit = Number(req.query.limit) || 14
+            const limit = Number(req.query.limit) || paginationDefault
             const startDateRaw = typeof req.query.start_date === 'string' ? req.query.start_date.trim() : null
             const endDateRaw = typeof req.query.end_date === 'string' ? req.query.end_date.trim() : null
 

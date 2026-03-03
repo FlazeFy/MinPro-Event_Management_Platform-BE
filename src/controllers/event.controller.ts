@@ -3,6 +3,8 @@ import { EventCategory } from "../generated/prisma/client"
 import { EventRepository } from "../repositories/event.repository"
 import { extractUserFromAuthHeader } from "../utils/auth.util"
 import { NullsOrder } from "../generated/prisma/internal/prismaNamespaceBrowser"
+import { paginationDefault } from "../const"
+import { cloudinaryUpload } from "../configs/cloudinary"
 
 export class EventController {
     private eventRepository: EventRepository
@@ -15,7 +17,7 @@ export class EventController {
         try {
             // Query params
             const page = Number(req.query.page) || 1
-            const limit = Number(req.query.limit) || 14
+            const limit = Number(req.query.limit) || paginationDefault
             const search = typeof req.query.search === 'string' ? req.query.search.trim() : null
             const category = typeof req.query.category === 'string' ? req.query.category.trim() : null
             const maxPrice =  Number(req.query.price) || null
@@ -74,10 +76,16 @@ export class EventController {
             if (Number.isNaN(endDate.getTime())) throw { code: 400, message: "Invalid end_date format" }
             if (startDate >= endDate) throw { code: 400, message: "end_date must be greater than start_date" }
 
+            // Image upload
+            let filePath: string | null = null 
+            if (req.file) { 
+                const result = await cloudinaryUpload(req.file) 
+                filePath = result.secure_url 
+            }
+
             // Repository : Create event
             const result = await this.eventRepository.createEventRepo(
-                userId, event_title, event_desc, event_category as EventCategory, Number(event_price) || 0, Boolean(is_paid),
-                Number(maximum_seat) || 0, venue_id, startDate, endDate, description,
+                userId, event_title, event_desc, event_category as EventCategory, Number(event_price) || 0, Number(maximum_seat) || 0, venue_id, startDate, endDate, description, filePath
             )
             if (!result) throw { code: 500, message: "Something went wrong" }
 
@@ -117,7 +125,7 @@ export class EventController {
 
             // Query params for pagination
             const page = Number(req.query.page) || 1
-            const limit = Number(req.query.limit) || 14
+            const limit = Number(req.query.limit) || paginationDefault
             const search = typeof req.query.search === 'string' ? req.query.search.trim() : null
 
             // Repository : Get recent event by organizer id from auth token
@@ -147,7 +155,7 @@ export class EventController {
 
             // Query params for pagination
             const page = Number(req.query.page) || 1
-            const limit = Number(req.query.limit) || 14
+            const limit = Number(req.query.limit) || paginationDefault
             const search = typeof req.query.search === 'string' ? req.query.search.trim() : null
 
             // Repository : Get recent event by organizer id from auth token
@@ -180,7 +188,7 @@ export class EventController {
 
             // Query params for pagination
             const page = Number(req.query.page) || 1
-            const limit = Number(req.query.limit) || 14
+            const limit = Number(req.query.limit) || paginationDefault
             const search = typeof req.query.search === 'string' ? req.query.search.trim() : null
 
             // Repository : Get event attendee by event id

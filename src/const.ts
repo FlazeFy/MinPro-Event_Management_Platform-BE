@@ -1,3 +1,4 @@
 export const extraPointForOwner: number = 10000
 export const extraDiscountForUser: number = 10
 export const pointExpiredDays: number = 90
+export const paginationDefault: number = 14

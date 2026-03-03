@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express"
 import { DiscountRepository } from "../repositories/discount.repository"
 import { extractUserFromAuthHeader } from "../utils/auth.util"
+import { paginationDefault } from "../const"
 
 export class DiscountController {
     private discountRepository: DiscountRepository
@@ -37,7 +38,7 @@ export class DiscountController {
 
             // Query params for pagination
             const page = Number(req.query.page) || 1
-            const limit = Number(req.query.limit) || 14
+            const limit = Number(req.query.limit) || paginationDefault
     
             // Repository : Get my discount
             const result = await this.discountRepository.findMyDiscountRepo(page, limit, userId, role ?? "")

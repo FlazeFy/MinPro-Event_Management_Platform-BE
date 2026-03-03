@@ -4,6 +4,7 @@ import { extractUserFromAuthHeader } from "../utils/auth.util"
 import { TransactionRepository } from "../repositories/transaction.repository"
 import { AttendeeRepository } from "../repositories/attendee.repository"
 import { EventRepository } from "../repositories/event.repository"
+import { paginationDefault } from "../const"
 
 export class StatsController {
     private eventOrganizerRepository: EventOrganizerRepository
@@ -98,7 +99,7 @@ export class StatsController {
 
             // Query params
             const page = Number(req.query.page) || 1
-            const limit = Number(req.query.limit) || 14
+            const limit = Number(req.query.limit) || paginationDefault
             const search = typeof req.query.search === 'string' ? req.query.search.trim() : null
     
             // Repository : Get all transaction

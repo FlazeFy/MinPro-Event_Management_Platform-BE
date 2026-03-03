@@ -96,40 +96,24 @@ export class EventRepository {
     }
 
     public createEventRepo = async (eventOrganizerId: string, event_title: string, event_desc: string, event_category: EventCategory, event_price: number,
-        is_paid: boolean, maximum_seat: number, venue_id: string, start_date: Date, end_date: Date, description?: string,
+        maximum_seat: number, venue_id: string, start_date: Date, end_date: Date, description?: string, filePath?: string | null
     ) => {
-        // Set price to 0 if it's a free event
-        const price = is_paid ? event_price : 0
-
-        const newEvent = await prisma.$transaction(async (tx) => {
-            // Create event first
-            const event = await tx.event.create({
-                data: {
-                    event_organizer_id: eventOrganizerId,
-                    event_title,
-                    event_desc,
-                    event_category,
-                    event_price: price,
-                    is_paid,
-                    maximum_seat,
-                },
-            })
-
-            // Continue by creating schedule for that event
-            await tx.event_schedule.create({
-                data: {
-                    event_id: event.id,
-                    venue_id,
-                    start_date,
-                    end_date,
-                    description,
-                },
-            })
-
-            return event
+        // Create event 
+        const event = await prisma.event.create({
+            data: {
+                event_organizer_id: eventOrganizerId, event_title, event_desc, event_category, event_pic: filePath, event_price,
+                is_paid: event_price === 0 ? false : true, maximum_seat,
+            },
         })
 
-        return newEvent
+        // Create event schedule
+        const event_schedule = await prisma.event_schedule.create({
+            data: {
+                event_id: event.id, venue_id, start_date, end_date, description,
+            },
+        })
+
+        return { ...event, event_schedule }
     }
 
     public findUpcomingEventRepo = async (userId: string, role: string) => {
@@ -155,7 +139,7 @@ export class EventRepository {
                         select: {
                             id: true, event_title: true, event_category: true,
                             transactions: {
-                                where: { customer_id: userId },
+                                where: { customer_id: userId, status: { not: "pending" } },
                                 select: {
                                     attendees: { select: { fullname: true } }
                                 }
