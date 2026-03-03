@@ -107,8 +107,49 @@ export class EventOrganizerRepository {
         if (exists) throw { code: 409, message: "Duplicate field found" }
     }
 
-    public updateEventOrganizerByIdRepo = async (userId: string, username: string, email: string, organizer_name: string, phone_number: string, address?: string, bio?: string) => {
+    private handleSocialMedia = async (userId: string, platform: 'instagram' | 'facebook' | 'tiktok', value?: string | null) => {
+        const existing = await prisma.social_media.findFirst({
+            where: {
+                event_organizer_id: userId,
+                social_media_platform: platform
+            }
+        })
+    
+        // if empty string or null then delete
+        if (!value || value.trim() === '') {
+            if (existing) {
+                await prisma.social_media.delete({
+                    where: { id: existing.id }
+                })
+            }
+            return
+        }
+    
+        // if value is not empty
+        if (existing) {
+            // Update if same socmed found
+            await prisma.social_media.update({
+                where: { id: existing.id },
+                data: { social_media_url: value }
+            })
+        } else {
+            // Create if it not found
+            await prisma.social_media.create({
+                data: {
+                    event_organizer_id: userId,
+                    social_media_platform: platform,
+                    social_media_url: value
+                }
+            })
+        }
+    }
+
+    public updateEventOrganizerByIdRepo = async (userId: string, username: string, email: string, organizer_name: string, phone_number: string, address?: string, bio?: string,
+        instagram?: string | null, facebook?: string | null, tiktok?: string | null) => {
         await this.checkUniqueEventOrganizer(userId, username, email, phone_number, organizer_name)
+        await this.handleSocialMedia(userId, 'instagram', instagram)
+        await this.handleSocialMedia(userId, 'facebook', facebook)
+        await this.handleSocialMedia(userId, 'tiktok', tiktok)
 
         return prisma.event_organizer.update({
             where: { id: userId },
@@ -137,6 +178,7 @@ export class EventOrganizerRepository {
             })
         }
 
+        // Find all EO
         const [data, total] = await Promise.all([
             prisma.event_organizer.findMany({
                 where,
@@ -174,6 +216,7 @@ export class EventOrganizerRepository {
             if (price_max !== null) eventWhereClause.event_price.lte = price_max
         }
 
+        // Find EO's event by title, desc, and price
         const [data, total] = await Promise.all([
             prisma.event_organizer.findMany({
                 where: { id },

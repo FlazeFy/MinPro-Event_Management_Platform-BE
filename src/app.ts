@@ -15,7 +15,6 @@ import FeedbackRouter from "./routes/feedback.router"
 import ReferralCodeRouter from "./routes/referral_code.router"
 import EventSchedule from "./routes/event_schedule.router"
 
-
 const PORT = process.env.PORT
 
 class App {
@@ -51,6 +50,7 @@ class App {
         const feedbackRouter = new FeedbackRouter()
         const refCodeRouter = new ReferralCodeRouter()
         const eventSchedule = new EventSchedule()
+
         this.app.use("/api/v1/auths", authRouter.getRouter())
         this.app.use("/api/v1/venues", venueRouter.getRouter())
         this.app.use("/api/v1/discounts", discountRouter.getRouter())

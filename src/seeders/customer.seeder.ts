@@ -12,7 +12,7 @@ class CustomerSeeder {
         return prisma.customer.create({
             data: {
                 username: faker.internet.username(),
-                email: faker.internet.email().toLowerCase(),
+                email: `${faker.internet.username().toLowerCase()}@gmail.com`,
                 fullname: faker.person.fullName(),
                 password: await hashPassword(password), 
                 phone_number: phone_number,
@@ -24,9 +24,7 @@ class CustomerSeeder {
     }
 
     public createMany = async (count: number, password: string) => {
-        for (let i = 0; i < count; i++) {
-            await this.create(password)
-        }
+        for (let i = 0; i < count; i++) await this.create(password)
     }
 }
 

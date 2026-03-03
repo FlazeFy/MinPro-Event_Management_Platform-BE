@@ -5,9 +5,7 @@ import { generateRefferalCode, randomEnumValue } from "../utils/generator.util"
 import { EventCategory } from "../generated/prisma/enums"
 
 class EventSeeder {
-    private randomEventCategory = (): EventCategory => {
-        return randomEnumValue(Object.values(EventCategory))
-    }
+    private randomEventCategory = (): EventCategory => randomEnumValue(Object.values(EventCategory))
 
     private findRandomEventOrganiser = async() => {
         const count = await prisma.event_organizer.count()
@@ -25,9 +23,7 @@ class EventSeeder {
 
         return prisma.event.create({
             data: {
-                event_organizer: {
-                    connect: { id: eventOrganizer?.id }
-                },
+                event_organizer: { connect: { id: eventOrganizer?.id } },
                 event_title: faker.music.songName(),
                 event_desc: faker.lorem.paragraph(),
                 event_category: this.randomEventCategory(),
@@ -40,9 +36,7 @@ class EventSeeder {
     }
 
     public createMany = async (count: number) => {
-        for (let i = 0; i < count; i++) {
-            await this.create()
-        }
+        for (let i = 0; i < count; i++) await this.create()
     }
 }
 

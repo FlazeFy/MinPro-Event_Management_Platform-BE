@@ -1,6 +1,6 @@
 import { faker } from "@faker-js/faker"
 import { prisma } from "../configs/prisma"
-import { pointExpiredDays } from "../const"
+import { extraPointForOwner, pointExpiredDays } from "../const"
 
 class CustomerPointSeeder {
     private findRandomCustomerWithoutPoint = async () => {
@@ -24,7 +24,7 @@ class CustomerPointSeeder {
 
         return prisma.customer_point.create({
             data: {
-                point: 10000,
+                point: extraPointForOwner,
                 customer_id: customer?.id!,
                 created_at: createdAt, 
                 expired_at: expiredAt,
@@ -33,9 +33,7 @@ class CustomerPointSeeder {
     }
 
     public createMany = async (count: number) => {
-        for (let i = 0; i < count; i++) {
-            await this.create()
-        }
+        for (let i = 0; i < count; i++) await this.create()
     }
 }
 

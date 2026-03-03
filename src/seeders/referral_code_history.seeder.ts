@@ -85,9 +85,7 @@ class ReferralCodeHistorySeeder {
     }
 
     public createMany = async (count: number) => {
-        for (let i = 0; i < count; i++) {
-            await this.create()
-        }
+        for (let i = 0; i < count; i++) await this.create()
     }
 }
 

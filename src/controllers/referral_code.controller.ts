@@ -17,10 +17,10 @@ export class ReferralCodeController {
 
     public postUseRefCodeController = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Body
+            // Request Body
             const { referral_code } = req.body
 
-            // Get user id
+            // Get user credential from auth token
             const { userId } = extractUserFromAuthHeader(req.headers.authorization)
 
             // Repo : Get my profile

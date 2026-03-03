@@ -50,6 +50,7 @@ export const validateParamMiddleware = (schema: ParamValidatorSchema) => {
 
         for (const param in schema) {
             const rules = schema[param]
+            // Param
             const value = req.params[param]
 
             if (rules.required && !value) {

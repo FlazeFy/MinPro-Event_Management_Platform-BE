@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express"
 import { EventScheduleRepository } from "../repositories/event_schedule.repository"
+import { paginationDefault } from "../const"
 
 export class EventScheduleController {
     private eventScheduleRepository: EventScheduleRepository
@@ -12,17 +13,20 @@ export class EventScheduleController {
         try {
             // Query params
             const page = Number(req.query.page) || 1
-            const limit = Number(req.query.limit) || 14
+            const limit = Number(req.query.limit) || paginationDefault
             const startDateRaw = typeof req.query.start_date === 'string' ? req.query.start_date.trim() : null
             const endDateRaw = typeof req.query.end_date === 'string' ? req.query.end_date.trim() : null
 
+            // Safety convert
             const startDate = startDateRaw ? new Date(startDateRaw) : null
             const endDate = endDateRaw ? new Date(endDateRaw) : null
 
+            // Date time validator
             if (startDate && Number.isNaN(startDate.getTime())) throw { code: 400, message: "Invalid start_date format" }
             if (endDate && Number.isNaN(endDate.getTime())) throw { code: 400, message: "Invalid end_date format" }
             if (startDate && endDate && startDate > endDate) throw { code: 400, message: "start_date cannot be greater than end_date" }
             
+            // Repo : Get all event schedule
             const result = await this.eventScheduleRepository.findAllEventScheduleRepo(page, limit, startDate, endDate)
             if (!result) throw { code: 404, message:  "Event Schedule not found" }
     

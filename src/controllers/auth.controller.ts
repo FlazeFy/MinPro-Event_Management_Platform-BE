@@ -21,7 +21,7 @@ export class AuthController {
 
     public postLoginController = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Body
+            // Request Body
             const { email, password } = req.body
 
             // Repo : Login
@@ -62,7 +62,7 @@ export class AuthController {
 
     public getMyProfileController = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Get user id
+            // Get user credential from auth token
             const { userId, role } = extractUserFromAuthHeader(req.headers.authorization)
             let result 
     
@@ -94,7 +94,7 @@ export class AuthController {
 
     public putUpdateProfileController = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Get user id
+            // Get user credential from auth token
             const { userId, role } = extractUserFromAuthHeader(req.headers.authorization)
             let result, newData
     
@@ -105,8 +105,9 @@ export class AuthController {
                     if (!result) throw { code: 404, message:  "User not found" }
 
                     // Repo : Update event organizer by id
-                    const { username, email, organizer_name, phone_number, address, bio } = req.body
-                    newData = await this.eventOrganizerRepository.updateEventOrganizerByIdRepo(userId, username, email, organizer_name, phone_number, address, bio)
+                    // Request Body
+                    const { username, email, organizer_name, phone_number, address, bio, instagram, facebook, tiktok } = req.body
+                    newData = await this.eventOrganizerRepository.updateEventOrganizerByIdRepo(userId, username, email, organizer_name, phone_number, address, bio, instagram, facebook, tiktok)
 
                     break;
                 } case "customer":
@@ -115,6 +116,7 @@ export class AuthController {
                     if (!result) throw { code: 404, message:  "User not found" }
 
                     // Repo : Update event organizer by id
+                    // Request Body
                     const { username, email, fullname, phone_number, birth_date } = req.body
                     newData = await this.customerRepository.updateCustomerByIdRepo(userId, username, email, fullname, phone_number, birth_date)
 
@@ -137,7 +139,7 @@ export class AuthController {
 
     public postRegisterCustomerController = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Body
+            // Request Body
             const { username, email, password, password_confirmation, fullname, phone_number, birth_date, referral_code } = req.body
 
             // Validation password confirmation
@@ -162,8 +164,7 @@ export class AuthController {
             await sendEmail(
                 email, "Account Registered!",
                 announcementEmailTemplate(
-                    email.split("@")[0],
-                    `Hi ${username}, Welcome to EventKu! Your registration is complete. We hope you enjoy your experience with us`
+                    username, `Hi ${username}, Welcome to EventKu! Your registration is complete. We hope you enjoy your experience with us`
                 )
             )
             
@@ -179,7 +180,7 @@ export class AuthController {
 
     public postUpdateProfileImageController = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Get user id
+            // Get user credential from auth token
             const { userId, role } = extractUserFromAuthHeader(req.headers.authorization)
 
             // Image upload
@@ -216,7 +217,7 @@ export class AuthController {
 
     public postRegisterEventOrganizerController = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Body
+            // Request Body
             const { username, email, password, password_confirmation, organizer_name, phone_number, bio, address } = req.body
 
             // Validation password confirmation
@@ -241,8 +242,7 @@ export class AuthController {
             await sendEmail(
                 email, "Account Registered!",
                 announcementEmailTemplate(
-                    email.split("@")[0],
-                    `Hi ${username}, Welcome to EventKu! Your registration is complete. We hope you enjoy your experience with us`
+                    username, `Hi ${username}, Welcome to EventKu! Your registration is complete. We hope you enjoy your experience with us`
                 )
             )
             

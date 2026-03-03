@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express"
 import { DiscountRepository } from "../repositories/discount.repository"
 import { extractUserFromAuthHeader } from "../utils/auth.util"
+import { paginationDefault } from "../const"
 
 export class DiscountController {
     private discountRepository: DiscountRepository
@@ -11,12 +12,13 @@ export class DiscountController {
 
     public getDiscountByEventOrganizerController = async (req: Request, res: Response, next: NextFunction) => {
         try {
+            // Param
             const eventOrganizerId = req.params.event_organizer_id as string
 
-            // Get user id from auth token
+            // Get user credential from auth token
             const { userId, role } = extractUserFromAuthHeader(req.headers.authorization)
     
-            // Repository : Get discount by event organizer id
+            // Repo : Get discount by event organizer id
             const result = await this.discountRepository.findDiscountByEventOrganizerRepo(eventOrganizerId, userId, role ?? "")
             if (!result || result.length === 0) throw { code: 404, message:  "Discount not found" }
     
@@ -37,9 +39,9 @@ export class DiscountController {
 
             // Query params for pagination
             const page = Number(req.query.page) || 1
-            const limit = Number(req.query.limit) || 14
+            const limit = Number(req.query.limit) || paginationDefault
     
-            // Repository : Get my discount
+            // Repo : Get my discount
             const result = await this.discountRepository.findMyDiscountRepo(page, limit, userId, role ?? "")
             if (!result || result.data.length === 0) throw { code: 404, message:  "Discount not found" }
     
@@ -63,10 +65,10 @@ export class DiscountController {
             // Request body
             const { percentage, description } = req.body
 
-            // Get user id
+            // Get user credential from auth token
             const { userId } = extractUserFromAuthHeader(req.headers.authorization)
     
-            // Repository : Create discount
+            // Repo : Create discount
             const result = await this.discountRepository.createDiscountRepo(userId, parseInt(percentage), description)
             if (!result) throw { code: 500, message:  "Something went wrong" }
     
@@ -81,16 +83,16 @@ export class DiscountController {
 
     public putUpdateDiscountByIdController = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Get params
+            // Param
             const discountId = req.params.id as string
 
             // Request body
             const { description } = req.body
 
-            // Get user id
+            // Get user credential from auth token
             const { userId } = extractUserFromAuthHeader(req.headers.authorization)
     
-            // Repository : Create discount
+            // Repo : Create discount
             const result = await this.discountRepository.updateDiscountByIdRepo(discountId, userId, description)
             if (!result) throw { code: 404, message:  "Discount not found" }
     
@@ -105,13 +107,13 @@ export class DiscountController {
 
     public hardDeleteDiscountByIdController = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Get params
+            // Param
             const discountId = req.params.id as string
 
-            // Get user id
+            // Get user credential from auth token
             const { userId } = extractUserFromAuthHeader(req.headers.authorization)
     
-            // Repository : Hard delete discount by id
+            // Repo : Hard delete discount by id
             const result = await this.discountRepository.deleteDiscountByIdRepo(userId, discountId)
             if (!result) throw { code: 500, message:  "Something went wrong" }
     

@@ -5,7 +5,7 @@ import { createToken } from '../utils/token.util'
 
 export class CustomerRepository {
     public findCustomerByIdRepo = async (id: string) => {
-        // ORM
+        // Get customer by id with ref code history
         const res = await prisma.customer.findUnique({
             where: { id },
             select: {
@@ -61,6 +61,8 @@ export class CustomerRepository {
 
     public createCustomerRepo = async (username: string, email: string, password: string, fullname: string, phone_number: string, birth_date: string, profile_pic: string | null, referral_code: string) => {
         const ownReferralCode: string = generateRefferalCode()
+
+        // Create customer
         const customer = await prisma.customer.create({
             data: { username, email, password, fullname, phone_number, birth_date, profile_pic, referral_code: ownReferralCode }
         })
@@ -76,13 +78,14 @@ export class CustomerRepository {
                 const created_at = new Date()
                 const expired_at = new Date(created_at.getTime() + pointExpiredDays * 24 * 60 * 60 * 1000)
 
+                // Create customer point
                 customer_point = await prisma.customer_point.create({
                     data: { point: extraPointForOwner, created_at, expired_at, customer_id: refCodeOwner.id }
                 })
 
                 // Create discount for ref'code user
                 const discount = await prisma.discount.create({
-                    data: { customer_id: customer.id, percentage : extraDiscountForUser, description: 'Extra discount after referral code redeem' }
+                    data: { customer_id: customer.id, percentage : extraDiscountForUser, description: 'Extra discount after referral code redeem', expired_at }
                 })
 
                 if (discount && customer_point) {
@@ -107,6 +110,7 @@ export class CustomerRepository {
         }
     }
 
+    // Make sure there's no duplicated credential
     public checkUniqueCustomer = async (userId: string, username?: string, email?: string, phone_number?: string) => {
         const exists = await prisma.customer.findFirst({
             where: {

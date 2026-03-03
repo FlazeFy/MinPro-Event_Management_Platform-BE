@@ -11,7 +11,7 @@ class EventOrganizerSeeder {
         return prisma.event_organizer.create({
             data: {
                 username: faker.internet.username(),
-                email: faker.internet.email().toLowerCase(),
+                email: `${faker.internet.username().toLowerCase()}@gmail.com`,
                 organizer_name: faker.company.name(),
                 bio: faker.lorem.paragraph(),
                 password: await hashPassword(password), 
@@ -23,9 +23,7 @@ class EventOrganizerSeeder {
     }
 
     public createMany = async (count: number, password: string) => {
-        for (let i = 0; i < count; i++) {
-            await this.create(password)
-        }
+        for (let i = 0; i < count; i++) await this.create(password)
     }
 }
 
