@@ -11,13 +11,13 @@ export class FeedbackController {
 
     public postCreateFeedbackController = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Request body
+            // Request Body
             const { feedback_rate, feedback_body } = req.body
 
-            // Get user id
+            // Get user credential from auth token
             const { userId, role } = extractUserFromAuthHeader(req.headers.authorization)
     
-            // Repository : Create feedback
+            // Repo : Create feedback
             const result = await this.feedbackRepository.createFeedbackRepo(feedback_rate, feedback_body, userId, role ?? "")
             if (!result) throw { code: 500, message: "Something went wrong" }
     
@@ -35,7 +35,7 @@ export class FeedbackController {
             // Query params
             const limit = Number(req.query.limit) || 3
     
-            // Repository : Get random feedback
+            // Repo : Get random feedback
             const result = await this.feedbackRepository.findRandomFeedbackRepo(limit)
             if (!result) throw { code: 404, message: "Feedback not found" }
     

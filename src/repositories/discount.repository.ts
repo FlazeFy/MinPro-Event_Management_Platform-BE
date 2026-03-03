@@ -5,6 +5,7 @@ export class DiscountRepository {
         const today = new Date()
 
         if (role === "customer") {
+            // Get discount by EO's id or discount by customer that still not expired yet
             const discountsPromise = prisma.discount.findMany({
                 where: {
                     OR: [
@@ -23,6 +24,7 @@ export class DiscountRepository {
                 }
             })
 
+            // Get customer point that still not expired yet
             const pointsPromise = prisma.customer_point.findMany({
                 where: {
                     customer_id,
@@ -38,6 +40,7 @@ export class DiscountRepository {
                 pointsPromise
             ])
 
+            // Remap in order to get same structure
             const mappedPoints = points.map((item) => ({
                 id: item.id,
                 expired_at: item.expired_at,
@@ -48,7 +51,7 @@ export class DiscountRepository {
 
             const combined = [...discounts, ...mappedPoints]
 
-            // Sort by expired_at
+            // Sort by expired at
             combined.sort((a, b) => {
                 const dateA = a.expired_at ? new Date(a.expired_at).getTime() : 0
                 const dateB = b.expired_at ? new Date(b.expired_at).getTime() : 0
@@ -57,6 +60,7 @@ export class DiscountRepository {
 
             return combined
         } else {
+            // Get EO's discount
             return await prisma.discount.findMany({
                 where: {
                     event_organizer_id,

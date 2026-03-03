@@ -3,7 +3,7 @@ import { format } from "date-fns"
 
 export class AttendeeRepository {
     public findEventAttendeePeriodicByOrganizerId = async (eventOrganizerId: string) => {
-        // Fetching
+        // Find attendee by EO's id
         const attendees = await prisma.attendee.findMany({
             select: {
                 transaction: {

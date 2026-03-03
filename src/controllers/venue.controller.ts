@@ -11,12 +11,12 @@ export class VenueController {
 
     public getAllVenueController = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Query params
+            // Query Param
             const page = Number(req.query.page) || 1
             const limit = Number(req.query.limit) || paginationDefault
             const search = typeof req.query.search === 'string' ? req.query.search.trim() : null
     
-            // Repository : Get all venue
+            // Repo : Get all venue
             const result = await this.venueRepository.findAllVenueRepo(page, limit, search)
             if (!result || result.data.length === 0) throw { code: 404, message:  "Venue not found" }
     
@@ -35,10 +35,10 @@ export class VenueController {
 
     public postCreateVenueController = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Request body
+            // Request Body
             const { venue_name, venue_description, venue_address, venue_coordinate } = req.body
     
-            // Repository : Create venue
+            // Repo : Create venue
             const result = await this.venueRepository.createVenueRepo(venue_name, venue_description, venue_address, venue_coordinate)
             if (!result) throw { code: 500, message:  "Something went wrong" }
     

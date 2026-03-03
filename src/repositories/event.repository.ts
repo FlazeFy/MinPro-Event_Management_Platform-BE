@@ -51,6 +51,7 @@ export class EventRepository {
     }
 
     public findEventByIdRepo = async (id: string) => {
+        // Find event detail with its review
         const [event, total_booked] = await Promise.all([
             prisma.event.findFirst({
                 where: {
@@ -118,6 +119,7 @@ export class EventRepository {
 
     public findUpcomingEventRepo = async (userId: string, role: string) => {
         if (role === "customer") {
+            // Find event that has been purchased by customer
             return await prisma.event_schedule.findMany({
                 where: {
                     event: {
@@ -149,6 +151,7 @@ export class EventRepository {
                 }
             })
         } else {
+            // Find event that has been purchased by customer
             return await prisma.event_schedule.findMany({
                 where: {
                     event: { event_organizer_id: userId }
@@ -225,6 +228,7 @@ export class EventRepository {
             }),
         }
 
+        // Find all event with schedule and attendee
         const [data, total] = await Promise.all([
             prisma.event.findMany({
                 where,
@@ -342,7 +346,7 @@ export class EventRepository {
             seatMap.set(eventId, (seatMap.get(eventId) ?? 0) + 1)
         }
     
-        // ORM Event
+        // Find all event that already finished
         const events = await prisma.event.findMany({
             where: {
                 id: { in: eventIds },
@@ -367,6 +371,7 @@ export class EventRepository {
             },
         })
 
+        // Ordering and merge event base data and stats
         const eventMap = new Map(events.map((dt) => [dt.id, dt]))
         const orderedData = eventIds.map((id) => {
             const event = eventMap.get(id)
@@ -413,6 +418,7 @@ export class EventRepository {
             }),
         }
     
+        // Find event attendee (customer)
         const [data, total] = await Promise.all([
             prisma.attendee.findMany({
                 where,

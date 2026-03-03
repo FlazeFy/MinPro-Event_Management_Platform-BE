@@ -19,10 +19,10 @@ export class StatsController {
 
     public getEventOrganizerSummaryController = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Get user id
+            // Get user credential from auth token
             const { userId } = extractUserFromAuthHeader(req.headers.authorization)
 
-            // Repository : Get summary event organizer
+            // Repo : Get summary event organizer
             const result = await this.eventOrganizerRepository.findEventOrganizerSummaryById(userId)
     
             // Success response
@@ -37,10 +37,10 @@ export class StatsController {
 
     public getPeriodicRevenueController = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Get user id
+            // Get user credential from auth token
             const { userId } = extractUserFromAuthHeader(req.headers.authorization)
 
-            // Repository : Get event periodic revenue
+            // Repo : Get event periodic revenue
             const result = await this.transactionRepository.findEventPeriodicRevenueByOrganizerId(userId)
     
             // Success response
@@ -55,10 +55,10 @@ export class StatsController {
 
     public getPeriodicEventAttendeeController = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Get user id
+            // Get user credential from auth token
             const { userId } = extractUserFromAuthHeader(req.headers.authorization)
 
-            // Repository : Get total event attendee periodic
+            // Repo : Get total event attendee periodic
             const result = await this.attendeeRepository.findEventAttendeePeriodicByOrganizerId(userId)
     
             // Success response
@@ -73,13 +73,13 @@ export class StatsController {
 
     public getTransactionDashboardController = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Get params
+            // Param
             const eventId = req.params.event_id as string
 
-            // Get user id
+            // Get user credential from auth token
             const { userId } = extractUserFromAuthHeader(req.headers.authorization)
 
-            // Repository : Get transaction dashboard
+            // Repo : Get transaction dashboard
             const result = await this.transactionRepository.findTransactionDashboardByEventOrganizerIdAndEventId(userId, eventId)
     
             // Success response
@@ -94,7 +94,7 @@ export class StatsController {
 
     public getCustomerTransactionByEventOrganizerController = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Get params
+            // Param
             const customerId = req.params.customer_id as string
 
             // Query params
@@ -102,7 +102,7 @@ export class StatsController {
             const limit = Number(req.query.limit) || paginationDefault
             const search = typeof req.query.search === 'string' ? req.query.search.trim() : null
     
-            // Repository : Get all transaction
+            // Repo : Get all transaction
             const result = await this.transactionRepository.findCustomerTransactionByEventOrganizerRepo(page, limit, search, customerId)
             if (!result || result.data.length === 0) throw { code: 404, message:  "Transaction not found" }
     

@@ -16,7 +16,7 @@ export class EventOrganizerController {
             const limit = Number(req.query.limit) || paginationDefault
             const search = typeof req.query.search === 'string' ? req.query.search.trim() : null
     
-            // Repository : Get all event organizer
+            // Repo : Get all event organizer
             const result = await this.eventOrganizerRepository.findAllEventOrganizerRepo(page, limit, search)
             if (!result) throw { code: 404, message:  "Event Organizer not found" }
     
@@ -37,6 +37,7 @@ export class EventOrganizerController {
         try {
             // Param
             const id = req.params.id as string
+
             // Query
             const page = Number(req.query.page) || 1
             const limit = Number(req.query.limit) || paginationDefault
@@ -45,7 +46,7 @@ export class EventOrganizerController {
             const price_min = Number(req.query.price_min) || null
             const price_max = Number(req.query.price_max) || null
     
-            // Repository : Get event organizer detail
+            // Repo : Get event organizer detail
             const result = await this.eventOrganizerRepository.findEventOrganizerDetailByIdRepo(id, page, limit, search, event_category !== 'all' ? event_category : null, price_max, price_min)
             if (!result) throw { code: 404, message:  "Event Organizer not found" }
     
@@ -63,15 +64,13 @@ export class EventOrganizerController {
     }
 
     public getNewComerEventOrganizerController = async (req: Request, res: Response, next: NextFunction) => {
-        try {
-            // Param
-            const id = req.params.id as string
+        try {            
             // Query
             const page = Number(req.query.page) || 1
             const limit = Number(req.query.limit) || paginationDefault
             const search = typeof req.query.search === 'string' ? req.query.search.trim() : null
     
-            // Repository : Get event organizer detail
+            // Repo : Get event organizer detail
             const result = await this.eventOrganizerRepository.findNewComerEventOrganizerRepo(page, limit, search)
             if (!result) throw { code: 404, message:  "Event Organizer not found" }
 
@@ -90,7 +89,7 @@ export class EventOrganizerController {
 
     public getTrendingEventOrganizerController = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Repository : Get trending event organizer
+            // Repo : Get trending event organizer
             const result = await this.eventOrganizerRepository.findTrendingEventOrganizerRepo()
     
             // Success response

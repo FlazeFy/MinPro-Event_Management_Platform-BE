@@ -18,7 +18,7 @@ export class TransactionController {
 
     public getAllTransactionController = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Get user id
+            // Get user credential from auth token
             const { userId, role } = extractUserFromAuthHeader(req.headers.authorization)
 
             // Query params
@@ -27,7 +27,7 @@ export class TransactionController {
             const search = typeof req.query.search === 'string' ? req.query.search.trim() : null
             const status = typeof req.query.status === 'string' ? req.query.status.trim() : null
     
-            // Repository : Get all transaction
+            // Repo : Get all transaction
             const result = await this.transactionRepository.findAllTransactionRepo(page, limit, search, status === "all" ? null : status, userId, role ?? "")
             if (!result || result.data.length === 0) throw { code: 404, message:  "Transaction not found" }
     
@@ -47,25 +47,27 @@ export class TransactionController {
 
     public postCreateTransactionController = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Get user id from auth token
+            // Get user credential from auth token
             const { userId } = extractUserFromAuthHeader(req.headers.authorization)
 
-            // Request body
+            // Request Body
             const { payment_method, attendees, discounts, event_id } = req.body
 
-            // Repository : Create event
+            // Repo : Create event
             const result = await this.transactionRepository.createTransactionRepo(payment_method, attendees, discounts, event_id, userId)
             if (!result) throw { code: 500, message: "Something went wrong" }
 
-            // Broadcast email
+            // Repo : Find customer profile for broadcast
             const user = await this.customerRepository.findCustomerByIdRepo(userId)
             if (!user || !user.email || !user.username) throw { code: 404, message: "User not found" }
+
+            // Broadcast email
+            const username = user.username
             await sendEmail(
                 user.email, "Waiting for payment!",
                 announcementEmailTemplate(
-                    user.username,
-                    result.amount > 0 ? `Hi ${user.username}, you've made a transaction for the event "${result.event.event_title}" with a total amount of Rp. ${result.amount.toLocaleString()}. Please complete the payment within 12 hours.`
-                        : `Hi ${user.username}, your transaction for the event "${result.event.event_title}" was successful. Thank you for trusting us, and enjoy the event!`
+                    username, result.amount > 0 ? `Hi ${username}, you've made a transaction for the event "${result.event.event_title}" with a total amount of Rp. ${result.amount.toLocaleString()}. Please complete the payment within 12 hours.`
+                        : `Hi ${username}, your transaction for the event "${result.event.event_title}" was successful. Thank you for trusting us, and enjoy the event!`
                 )
             )
 
@@ -80,7 +82,7 @@ export class TransactionController {
 
     public postUpdateTransactionEvidenceController = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Get user id from auth token
+            // Get user credential from auth token
             const { userId } = extractUserFromAuthHeader(req.headers.authorization)
 
             // Image upload
@@ -92,17 +94,19 @@ export class TransactionController {
                 throw { code: 404, message: "File not found" }
             }
 
-            // Request body
+            // Request Body
             const { transaction_id } = req.body
 
-            // Repository : Update transaction by id
+            // Repo : Update transaction by id
             const result = await this.transactionRepository.updateTransactionRepo(transaction_id, userId, filePath)
             if (!result) throw { code: 404, message: "Transaction not found" }
+
+            const username = result.customer.username
+            // Broadcast email
             await sendEmail(
                 result.customer.email, "Payment successfull!",
                 announcementEmailTemplate(
-                    result.customer.username,
-                    `Hi ${result.customer.username}, your transaction for the event "${result.event_title}" with a total amount of Rp. ${result.amount.toLocaleString()} is completed. Here is your ticket token: <b>${result.ticket_token}</b>`
+                    username, `Hi ${username}, your transaction for the event "${result.event_title}" with a total amount of Rp. ${result.amount.toLocaleString()} is completed. Here is your ticket token: <b>${result.ticket_token}</b>`
                 )
             )
 

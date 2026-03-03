@@ -178,6 +178,7 @@ export class EventOrganizerRepository {
             })
         }
 
+        // Find all EO
         const [data, total] = await Promise.all([
             prisma.event_organizer.findMany({
                 where,
@@ -215,6 +216,7 @@ export class EventOrganizerRepository {
             if (price_max !== null) eventWhereClause.event_price.lte = price_max
         }
 
+        // Find EO's event by title, desc, and price
         const [data, total] = await Promise.all([
             prisma.event_organizer.findMany({
                 where: { id },
