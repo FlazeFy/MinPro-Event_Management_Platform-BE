@@ -203,6 +203,7 @@ export class EventOrganizerRepository {
             event_organizer_id: id,
         }
 
+        // Filter event organizer's event
         if (search) {
             eventWhereClause.OR = [
                 { event_title: { contains: search, mode: "insensitive" } },
@@ -217,29 +218,59 @@ export class EventOrganizerRepository {
         }
 
         // Find EO's event by title, desc, and price
-        const [data, total] = await Promise.all([
-            prisma.event_organizer.findMany({
+        const [data, totalFilteredEvents, totalAllEvents] = await Promise.all([
+            prisma.event_organizer.findFirst({
                 where: { id },
                 select: {
-                    organizer_name: true, email: true, address: true, phone_number: true, bio: true, created_at: true,
+                    organizer_name: true, email: true, address: true, phone_number: true, bio: true, created_at: true, profile_pic: true,
                     events: {
                         where: eventWhereClause,
                         skip,
                         take: limit,
                         select: {
-                            event_title: true, event_desc: true, event_category: true, event_price: true, created_at: true
+                            event_title: true, event_desc: true, event_category: true, event_price: true, created_at: true,
+                            transactions: {
+                                select: {
+                                    _count: {
+                                        select: { attendees: true }
+                                    }
+                                }
+                            }
                         },
                         orderBy: [
                             { event_price: 'asc' },
                             { created_at: 'desc' }
-                        ]
-                    },
+                        ],
+                    }
                 }
             }),
-            prisma.event.count({ where: eventWhereClause })
+            prisma.event.count({ where: eventWhereClause }),
+            prisma.event.count({ where: { event_organizer_id: id } }),
         ])
 
-        return { data, total }
+        if (!data) return null
+        
+        // Count attendees per event
+        const finalRes = data.events.map(({ transactions, ...event }) => ({
+            ...event,
+            total_attendees: transactions.reduce((s, t) => s + t._count.attendees, 0)
+        }))
+    
+        return {
+            data: {
+                organizer_name: data.organizer_name,
+                email: data.email,
+                address: data.address,
+                phone_number: data.phone_number,
+                bio: data.bio,
+                created_at: data.created_at,
+                profile_pic: data.profile_pic,
+                total_event: totalAllEvents,
+                total_filtered_event: totalFilteredEvents,
+                events: finalRes
+            },
+            total: totalFilteredEvents
+        }
     }
 
     private findEventOrganizerById = async (id: string) => {
