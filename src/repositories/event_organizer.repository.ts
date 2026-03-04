@@ -228,14 +228,24 @@ export class EventOrganizerRepository {
                         skip,
                         take: limit,
                         select: {
-                            event_title: true, event_desc: true, event_category: true, event_price: true, created_at: true,
+                            id: true, event_title: true, event_category: true, event_desc: true, is_paid: true, maximum_seat: true, event_pic: true, event_price: true,
                             transactions: {
                                 select: {
                                     _count: {
                                         select: { attendees: true }
                                     }
                                 }
-                            }
+                            },
+                            event_schedule: {
+                                orderBy: { start_date: 'desc' },
+                                take: 1,
+                                select: {
+                                    start_date: true, end_date: true,
+                                    venue: {
+                                        select: { venue_name: true }
+                                    },
+                                },
+                            },
                         },
                         orderBy: [
                             { event_price: 'asc' },
