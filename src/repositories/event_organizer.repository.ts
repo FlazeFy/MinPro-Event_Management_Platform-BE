@@ -415,9 +415,9 @@ export class EventOrganizerRepository {
             where: {
                 event: { event_organizer_id: id },
             },
-            _sum: { amount: true },
+            _sum: { final_amount: true },
         })
-        const totalActualRevenue = totalActualRevenueAgg._sum.amount ?? 0
+        const totalActualRevenue = totalActualRevenueAgg._sum.final_amount ?? 0
         
         // Reconstruct original revenue before discounts
         const transactions = await prisma.transaction.findMany({
@@ -439,7 +439,7 @@ export class EventOrganizerRepository {
                 discountMultiplier *= (1 - ud.discount.percentage / 100)
             }
             
-            const originalAmount = tx.amount / discountMultiplier
+            const originalAmount = tx.final_amount / discountMultiplier
             totalRevenue += originalAmount
         }
         

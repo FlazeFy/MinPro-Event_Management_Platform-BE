@@ -170,7 +170,7 @@ export class EventRepository {
                             id: true, event_title: true, event_category: true, maximum_seat: true,
                             transactions: {
                                 select: {
-                                    amount: true, paid_off_at: true, attendees: { select: { id: true } }
+                                    final_amount: true, paid_off_at: true, attendees: { select: { id: true } }
                                 }
                             }
                         }
@@ -179,7 +179,7 @@ export class EventRepository {
             }).then(events => {
                 // remaining calculaiton to find total profit and seat remaining
                 return events.map(e => {
-                    const totalProfit = e.event.transactions.filter(dt => dt.paid_off_at !== null).reduce((sum, idx) => sum + idx.amount, 0)
+                    const totalProfit = e.event.transactions.filter(dt => dt.paid_off_at !== null).reduce((sum, idx) => sum + idx.final_amount, 0)
                     const totalAttendees = e.event.transactions.reduce((sum, idx) => sum + idx.attendees.length, 0)
 
                     return {
@@ -321,9 +321,9 @@ export class EventRepository {
             where: {
                 event_id: { in: eventIds },
             },
-            _sum: { amount: true },
+            _sum: { final_amount: true },
         })
-        const revenueMap = new Map(revenueAgg.map((dt) => [dt.event_id, dt._sum.amount ?? 0]))
+        const revenueMap = new Map(revenueAgg.map((dt) => [dt.event_id, dt._sum.final_amount ?? 0]))
 
         // Count total attendee
         const attendeeAgg = await prisma.attendee.findMany({
