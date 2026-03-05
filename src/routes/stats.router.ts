@@ -15,8 +15,9 @@ export default class StatsRouter {
     }
 
     private initializeRoute = () => {
-        const { getEventOrganizerSummaryController, getPeriodicRevenueController, getPeriodicEventAttendeeController, getCustomerTransactionByEventOrganizerController, getTransactionDashboardController } = this.statsController
+        const { getEventOrganizerSummaryController, getPeriodicRevenueController, getPeriodicEventAttendeeController, getCustomerTransactionByEventOrganizerController, getTransactionDashboardController, getSummaryApps } = this.statsController
 
+        this.route.get("/summary/apps", getSummaryApps)
         this.route.get("/summary/event_organizer", verifyAuthToken, authorizeRole(["event_organizer"]), getEventOrganizerSummaryController)
         this.route.get("/periodic/revenue", verifyAuthToken, authorizeRole(["event_organizer"]), getPeriodicRevenueController)
         this.route.get("/periodic/attendee", verifyAuthToken, authorizeRole(["event_organizer"]), getPeriodicEventAttendeeController)

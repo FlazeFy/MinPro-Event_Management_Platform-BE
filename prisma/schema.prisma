@@ -140,10 +140,14 @@ model event {
 
 model transaction {
   id              String    @id @default(uuid()) @db.Char(36)
+  transaction_code String   @db.Char(16)
   customer_id     String    @db.Char(36)
   event_id        String    @db.Char(36)
   payment_method  String    @db.Char(16)
-  amount          Int       @default(0) @db.Integer()
+  real_amount     Int       @default(0) @db.Integer()
+  discount_cut    Int       @default(0) @db.Integer()
+  point_cut       Int       @default(0) @db.Integer()
+  final_amount    Int       @default(0) @db.Integer()
   created_at      DateTime  @default(now()) @db.Timestamptz(6)
   paid_off_at     DateTime? @updatedAt @db.Timestamptz(6) 
   transaction_pic String?   @db.Text

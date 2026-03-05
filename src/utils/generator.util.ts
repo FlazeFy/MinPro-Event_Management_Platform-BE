@@ -32,3 +32,10 @@ export const generateTier = (role: string, total: number) => {
 
     return "Unknown"
 }
+
+export const getTransactionCode = (event_id: string): string => {
+    const first = event_id.slice(0, 4)
+    const last = Date.now().toString().slice(-6)
+
+    return `${first}${generateRefferalCode()}${last}`
+}

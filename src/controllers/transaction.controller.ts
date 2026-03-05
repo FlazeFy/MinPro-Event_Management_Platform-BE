@@ -66,7 +66,7 @@ export class TransactionController {
             await sendEmail(
                 user.email, "Waiting for payment!",
                 announcementEmailTemplate(
-                    username, result.amount > 0 ? `Hi ${username}, you've made a transaction for the event "${result.event.event_title}" with a total amount of Rp. ${result.amount.toLocaleString()}. Please complete the payment within 12 hours.`
+                    username, result.final_amount > 0 ? `Hi ${username}, you've made a transaction for the event "${result.event.event_title}" with a total amount of Rp. ${result.final_amount.toLocaleString()}. Please complete the payment within 12 hours.`
                         : `Hi ${username}, your transaction for the event "${result.event.event_title}" was successful. Thank you for trusting us, and enjoy the event!`
                 )
             )
@@ -106,7 +106,7 @@ export class TransactionController {
             await sendEmail(
                 result.customer.email, "Payment successfull!",
                 announcementEmailTemplate(
-                    username, `Hi ${username}, your transaction for the event "${result.event_title}" with a total amount of Rp. ${result.amount.toLocaleString()} is completed. Here is your ticket token: <b>${result.ticket_token}</b>`
+                    username, `Hi ${username}, your transaction for the event "${result.event_title}" with a total amount of Rp. ${result.final_amount.toLocaleString()} is completed. Here is your ticket token: <b>${result.ticket_token}</b>`
                 )
             )
 

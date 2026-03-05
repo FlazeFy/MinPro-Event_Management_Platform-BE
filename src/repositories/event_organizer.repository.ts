@@ -228,14 +228,24 @@ export class EventOrganizerRepository {
                         skip,
                         take: limit,
                         select: {
-                            event_title: true, event_desc: true, event_category: true, event_price: true, created_at: true,
+                            id: true, event_title: true, event_category: true, event_desc: true, is_paid: true, maximum_seat: true, event_pic: true, event_price: true,
                             transactions: {
                                 select: {
                                     _count: {
                                         select: { attendees: true }
                                     }
                                 }
-                            }
+                            },
+                            event_schedule: {
+                                orderBy: { start_date: 'desc' },
+                                take: 1,
+                                select: {
+                                    start_date: true, end_date: true,
+                                    venue: {
+                                        select: { venue_name: true }
+                                    },
+                                },
+                            },
                         },
                         orderBy: [
                             { event_price: 'asc' },
@@ -405,9 +415,9 @@ export class EventOrganizerRepository {
             where: {
                 event: { event_organizer_id: id },
             },
-            _sum: { amount: true },
+            _sum: { final_amount: true },
         })
-        const totalActualRevenue = totalActualRevenueAgg._sum.amount ?? 0
+        const totalActualRevenue = totalActualRevenueAgg._sum.final_amount ?? 0
         
         // Reconstruct original revenue before discounts
         const transactions = await prisma.transaction.findMany({
@@ -429,7 +439,7 @@ export class EventOrganizerRepository {
                 discountMultiplier *= (1 - ud.discount.percentage / 100)
             }
             
-            const originalAmount = tx.amount / discountMultiplier
+            const originalAmount = tx.final_amount / discountMultiplier
             totalRevenue += originalAmount
         }
         

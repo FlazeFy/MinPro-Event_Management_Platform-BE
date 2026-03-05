@@ -1,7 +1,7 @@
 import { prisma } from '../configs/prisma'
 import { Prisma } from '../generated/prisma/client'
 import { format } from "date-fns"
-import { generateRefferalCode } from '../utils/generator.util'
+import { generateRefferalCode, getTransactionCode } from '../utils/generator.util'
 import { pointExpiredDays } from '../const'
 
 export class TransactionRepository {
@@ -9,7 +9,7 @@ export class TransactionRepository {
         // Fetching
         const transactions = await prisma.transaction.findMany({
             select: { 
-                amount: true, created_at: true,
+                final_amount: true, created_at: true,
                 event: { 
                     select: { event_category: true } 
                 }
@@ -29,7 +29,7 @@ export class TransactionRepository {
             if (!monthlyData[monthLabel]) monthlyData[monthLabel] = {}
             if (!monthlyData[monthLabel][category]) monthlyData[monthLabel][category] = 0
 
-            monthlyData[monthLabel][category] += dt.amount
+            monthlyData[monthLabel][category] += dt.final_amount
         }
 
         // Sort month descending to take last 7
@@ -85,7 +85,8 @@ export class TransactionRepository {
                 take: limit,
                 orderBy: { created_at: 'desc' },
                 select: {
-                    id: true, created_at: true, amount: true, payment_method: true, paid_off_at: true, status: true, transaction_pic: true, ticket_token: true,
+                    id: true, transaction_code: true, created_at: true, final_amount: true, payment_method: true, paid_off_at: true, status: true, transaction_pic: true, ticket_token: true,
+                    real_amount: true, discount_cut: true, point_cut: true,
                     event: {
                         select: {
                             id: true, event_title: true,
@@ -93,7 +94,7 @@ export class TransactionRepository {
                                 orderBy: { end_date: 'desc' },
                                 take: 1,
                                 select: {
-                                    end_date: true,
+                                    end_date: true, start_date: true,
                                     venue: {
                                         select: {
                                             venue_name: true, venue_coordinate: true,
@@ -116,7 +117,7 @@ export class TransactionRepository {
             prisma.transaction.count({ where }),
             prisma.transaction.aggregate({
                 where,
-                _avg: { amount: true },
+                _avg: { final_amount: true },
             }),
         ])
 
@@ -126,7 +127,7 @@ export class TransactionRepository {
             is_discount: dt.used_discounts.length > 0,
         }))
 
-        return { data: formattedTransactions, total, average_transaction: aggregate._avg.amount ?? 0 }
+        return { data: formattedTransactions, total, average_transaction: aggregate._avg.final_amount ?? 0 }
     }    
 
     public findCustomerTransactionByEventOrganizerRepo = async (page: number, limit: number, search: string | null, customer_id: string) => {
@@ -147,7 +148,7 @@ export class TransactionRepository {
                 take: limit,
                 orderBy: { created_at: 'desc' },
                 select: {
-                    amount: true, created_at: true,
+                    final_amount: true, created_at: true,
                     event: {
                         select: { event_title: true, event_category: true }
                     }
@@ -237,6 +238,10 @@ export class TransactionRepository {
         // Validate discount
         let isValidDiscount = null
         let isValidPoint = null
+        let real_amount: number = isValidEvent.event_price
+        let discount_cut: number = 0
+        let point_cut: number = 0
+
         if (isValidEvent.is_paid) {
             if (discounts && discounts.length > 0) {
                 for (const item of discounts) {
@@ -244,7 +249,13 @@ export class TransactionRepository {
                     if (item.type === "discount") {
                         isValidDiscount = await prisma.discount.findFirst({
                             where: {
-                                id: item.id, event_organizer_id: isValidEvent.event_organizer_id
+                                id: item.id,
+                                OR: [
+                                    // Customer discount from ref code
+                                    { event_organizer_id: null },
+                                    // EO discount
+                                    { event_organizer_id: isValidEvent.event_organizer_id }
+                                ]
                             }
                         })    
                         if (!isValidDiscount) throw { code: 404, message: "Discount not found" }
@@ -272,11 +283,17 @@ export class TransactionRepository {
             finalPrice = basePrice
 
             if (finalPrice > 0)
-            // Apply percentage discount
-            if (isValidDiscount) finalPrice = finalPrice - (finalPrice * isValidDiscount.percentage / 100)
-
             // Apply customer points
-            if (isValidPoint) finalPrice = finalPrice - isValidPoint.point
+            if (isValidPoint) {
+                point_cut = isValidPoint.point
+                finalPrice = finalPrice - point_cut
+            }
+
+            // Apply percentage discount
+            if (isValidDiscount) {
+                discount_cut = finalPrice * isValidDiscount.percentage / 100
+                finalPrice = finalPrice - discount_cut
+            }
 
             // Prevent negative amount
             if (finalPrice < 0) finalPrice = 0
@@ -284,7 +301,17 @@ export class TransactionRepository {
 
         const transaction = await prisma.transaction.create({
             data: { 
-                customer_id: userId, event_id, payment_method, amount: finalPrice, paid_off_at: null, status: !isValidEvent.is_paid ? "paid" : "pending", ticket_token: !isValidEvent.is_paid ? generateRefferalCode() : null 
+                transaction_code: getTransactionCode(isValidEvent.id),
+                customer_id: userId, 
+                event_id, 
+                payment_method, 
+                real_amount,
+                discount_cut,
+                point_cut, 
+                final_amount: finalPrice, 
+                paid_off_at: null, 
+                status: !isValidEvent.is_paid ? "paid" : "pending", 
+                ticket_token: !isValidEvent.is_paid ? generateRefferalCode() : null 
             },
         })
 
@@ -331,7 +358,7 @@ export class TransactionRepository {
         if (!customer) throw { code: 404, message: "Customer not found" }
 
         // Add extra point after each payment validated
-        const finalPrice = transaction.amount
+        const finalPrice = transaction.final_amount
         if (finalPrice > 1000) {
             const created_at = new Date()
             const expired_at = new Date(created_at.getTime() + pointExpiredDays * 24 * 60 * 60 * 1000)
@@ -342,7 +369,7 @@ export class TransactionRepository {
         }
 
         return {
-            event_title: event?.event_title, amount: transaction.amount, ticket_token, customer: customer
+            event_title: event?.event_title, final_amount: transaction.final_amount, ticket_token, customer: customer
         }
     }
 }

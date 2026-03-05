@@ -9,9 +9,9 @@ import VenueSeeder from "./seeders/venue.seeder"
 import EventSeeder from "./seeders/event.seeder"
 import EventScheduleSeeder from "./seeders/event_schedule.seeder"
 import TransactionSeeder from "./seeders/transaction.seeder"
-import AttendeeSeeder from "./seeders/attendee.seeder"
+// import AttendeeSeeder from "./seeders/attendee.seeder"
 import ReviewSeeder from "./seeders/review.seeder"
-import UsedDiscountSeeder from "./seeders/used_discount.seeder"
+// import UsedDiscountSeeder from "./seeders/used_discount.seeder"
 import FeedbackSeeder from "./seeders/feedback.seeder"
 import CustomerPointSeeder from "./seeders/customer_point.seeder"
 
@@ -25,9 +25,9 @@ class Seeder {
     private eventSeeder = new EventSeeder()
     private eventScheduleSeeder = new EventScheduleSeeder()
     private transactionSeeder = new TransactionSeeder()
-    private attendeeSeeder = new AttendeeSeeder()
+    // private attendeeSeeder = new AttendeeSeeder()
     private reviewSeeder = new ReviewSeeder()
-    private usedDiscountSeeder = new UsedDiscountSeeder()
+    // private usedDiscountSeeder = new UsedDiscountSeeder()
     private feedbackSeeder = new FeedbackSeeder()
     private customerPointSeeder = new CustomerPointSeeder()
     private password = "nopass123"
@@ -60,13 +60,13 @@ class Seeder {
             await this.customerPointSeeder.createMany(50)
             await this.eventOrganizerSeeder.createMany(25, this.password)
             await this.socialMediaSeeder.createMany(20)
-            await this.discountSeeder.createMany(10)
+            await this.discountSeeder.createMany(20)
             await this.eventSeeder.createMany(50)
             await this.eventScheduleSeeder.createMany(50)
             await this.transactionSeeder.createMany(200)
-            await this.attendeeSeeder.createMany(1000)
+            // await this.attendeeSeeder.createMany(1000)
             await this.reviewSeeder.createMany(175)
-            await this.usedDiscountSeeder.createMany(175)
+            // await this.usedDiscountSeeder.createMany(175)
             await this.feedbackSeeder.createMany(100)
             await this.refCodeSeeder.createMany(100)
         } catch (err) {
