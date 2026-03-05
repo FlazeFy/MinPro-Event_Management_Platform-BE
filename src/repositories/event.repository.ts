@@ -447,6 +447,13 @@ export class EventRepository {
         return { data, total }
     }
 
+    public findAppsSummaryRepo = async () => {
+        const total_event = await prisma.event.count()
+        const total_transaction = await prisma.transaction.count({ where: { status: { not: "pending" } } })
+
+        return { total_event, total_transaction }
+    }
+
     public deleteEventByIdRepo = async (userId: string, eventId: string) => {
         try {
             return await prisma.event.delete({

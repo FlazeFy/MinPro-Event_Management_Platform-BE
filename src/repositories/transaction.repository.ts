@@ -85,7 +85,8 @@ export class TransactionRepository {
                 take: limit,
                 orderBy: { created_at: 'desc' },
                 select: {
-                    id: true, created_at: true, final_amount: true, payment_method: true, paid_off_at: true, status: true, transaction_pic: true, ticket_token: true,
+                    id: true, transaction_code: true, created_at: true, final_amount: true, payment_method: true, paid_off_at: true, status: true, transaction_pic: true, ticket_token: true,
+                    real_amount: true, discount_cut: true, point_cut: true,
                     event: {
                         select: {
                             id: true, event_title: true,
@@ -93,7 +94,7 @@ export class TransactionRepository {
                                 orderBy: { end_date: 'desc' },
                                 take: 1,
                                 select: {
-                                    end_date: true,
+                                    end_date: true, start_date: true,
                                     venue: {
                                         select: {
                                             venue_name: true, venue_coordinate: true,
